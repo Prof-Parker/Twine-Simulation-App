@@ -2,7 +2,7 @@
 
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
-$out = Join-Path $root "NursingSimulations.html"
+$out = Join-Path $root "index.html"
 
 # Prefer local tweego install (tweego-* folder in project root).
 $tweego = "tweego"
