@@ -1,0 +1,63 @@
+:: Start [setup]
+<center><h1>Shasta College Simulation Program Facilitation Storyboard</h1></center>\
+<hr>\
+<center>\
+	Developed and maintained by Robin Parker
+</center>\
+
+<h3>Select a course to view available simulations.</h3>\
+	* [[REGN 15P]]
+	* [[REGN 25P]]
+	* [[REGN 35P]]
+	* [[REGN 36P]]
+	* [[REGN 48P]]
+
+
+:: REGN 15P [setup]
+!! REGN 15P Simulations
+
+<<button "Example Patient (demo)">>
+	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 15P">>
+<</button>>
+
+[[Back to main menu|Start]]
+
+
+:: REGN 25P [setup]
+!! REGN 25P Simulations
+
+<<button "Example Patient (demo)">>
+	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 25P">>
+<</button>>
+
+[[Back to main menu|Start]]
+
+
+:: REGN 35P [setup]
+!! REGN 35P Simulations
+
+<<button "Example Patient (demo)">>
+	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 35P">>
+<</button>>
+
+[[Back to main menu|Start]]
+
+
+:: REGN 36P [setup]
+!! REGN 36P Simulations
+
+<<button "Example Patient (demo)">>
+	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 36P">>
+<</button>>
+
+[[Back to main menu|Start]]
+
+
+:: REGN 48P [setup]
+!! REGN 48P Simulations
+
+<<button "Example Patient (demo)">>
+	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 48P">>
+<</button>>
+
+[[Back to main menu|Start]]

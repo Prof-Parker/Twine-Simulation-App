@@ -1,0 +1,5 @@
+# Same rules as twee/.gitignore — must live at repo root for Git to apply them project-wide.
+.vscode/
+archive/
+sugarcube-2/
+tweego-2.1.1-windows-x64/

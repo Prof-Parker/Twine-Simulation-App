@@ -1,0 +1,649 @@
+:: StoryTitle
+Nursing Simulation Framework
+
+
+:: StoryData
+{
+  "ifid": "802BBAB3-7864-4AC1-B8B8-5FD4F192C24A",
+  "format": "SugarCube",
+  "format-version": "2.37.3",
+  "tag-colors": {
+    "setup": "blue",
+    "sim": "green"
+  },
+  "zoom": 1
+}
+
+
+:: Assessment_Table [nobr] {"position":"150,25","size":"100,100"}
+<table class="assessment-table">
+	<caption>Assessment</caption>
+	<tr><th scope="row">Neuro</th><td><<= $neuro>></td></tr>
+	<tr><th scope="row">Cardiac</th><td><<= $cardiac>></td></tr>
+	<tr><th scope="row">Resp</th><td><<= $resp>></td></tr>
+	<tr><th scope="row">GI</th><td><<= $gi>></td></tr>
+	<tr><th scope="row">GU</th><td><<= $gu>></td></tr>
+	<tr><th scope="row">Musculoskeletal</th><td><<= $musk>></td></tr>
+	<tr><th scope="row">Skin</th><td><<= $skin>></td></tr>
+	<tr><th scope="row">HEENT</th><td><<= $heent>></td></tr>
+	<tr><th scope="row">Psych</th><td><<= $psych>></td></tr>
+	<tr><th scope="row">Vascular Access</th><td><<= $vascularAccess>></td></tr>
+	<tr><th scope="row">Misc</th><td><<= $misc>></td></tr>
+</table>
+
+
+:: PassageFooter {"position":"400,25","size":"100,100"}
+<<nobr>>
+<<if tags().includes("setup")>>
+<<elseif tags().includes("sim")>>
+<div id="sim-footer" class="sim-footer-pinned">
+	<h3 class="sim-footer-heading">Sim Controls</h3>
+	<div class="sim-footer-links">
+		<<displaySimProgressLinks>>
+		<hr>
+	</div>
+	<div class="sim-footer-audio">
+		<h4 class="sim-footer-subheading">Audio controls</h4>
+		<div class="sim-footer-audio-buttons">
+			<<button "Hold Music">>
+				<<audio "hold_music" loop play>>
+			<</button>>
+			<<button "PA Announcement">>
+				<<audio "pa_announcement" play>>
+			<</button>>
+			<<button "Bodily Function">>
+				<<audio "bodily_function" play>>
+			<</button>>
+		</div>
+		<div class="sim-footer-audio-stop">
+			<<button "Stop Audio">>
+				<<audio ":all" stop>>
+			<</button>>
+		</div>
+	</div>
+</div>
+<</if>>
+<</nobr>>
+
+:: PassageHeader {"position":"275,25","size":"100,100"}
+<<nobr>>
+<<if tags().includes("setup")>>
+<<elseif tags().includes("sim")>>
+<div class="sim-header">
+	<span><strong>Patient:</strong> $patientName</span>
+	<span><strong>DOB:</strong> $patientDOB</span>
+	<span><strong>Allergies:</strong> $patientAllergies</span>
+	<span class="sim-run-time"><strong>Run time:</strong> <span class="sim-run-time-value"><<playtime format>></span></span>
+</div>
+<hr>
+<</if>>
+<</nobr>>
+:: StoryCaption {"position":"525,25","size":"100,100"}
+<<if $currentSimStart>>
+	<<button "Repeat Sim">>
+		<<repeatSim>>
+	<</button>>
+<</if>>
+
+<<link "Main Menu" "Start">>
+	<<audio ":all" stop>>
+	<<unset $currentSimStart>>
+	<<set $patientName to "", $patientDOB to "", $patientAllergies to "">>
+	<<clearAssessment>>
+<</link>>
+
+
+:: StoryInit {"position":"25,25","size":"100,100"}
+<<set $patientName to "">>
+<<set $patientDOB to "">>
+<<set $patientAllergies to "">>
+<<set $currentSimStart to "">>
+<<set $returnHub to "Start">>
+<<set $simPatientBackup to {}>>
+
+/% Assessment findings (per sim; update individual vars as the scenario progresses). %/
+<<set $neuro to "">>
+<<set $cardiac to "">>
+<<set $resp to "">>
+<<set $gi to "">>
+<<set $gu to "">>
+<<set $musk to "">>
+<<set $skin to "">>
+<<set $heent to "">>
+<<set $psych to "">>
+<<set $vascularAccess to "">>
+<<set $misc to "">>
+<<set $assessmentBackup to {}>>
+
+<<cacheaudio "hold_music" "audio/common/hold_music.mp3">>
+<<cacheaudio "pa_announcement" "audio/common/move_your_car.mp3">>
+<<cacheaudio "bodily_function" "audio/common/poop.mp3">>
+
+<<createaudiogroup ":ui">>
+	<<track "hold_music">>
+	<<track "pa_announcement">>
+	<<track "bodily_function">>
+<</createaudiogroup>>
+
+
+:: StoryScript [script]
+/* Chapel's Playtime Macro for sim clock */
+
+(function () {
+    'use strict';
+    // play time system, by chapel; for SugarCube 2
+    // version 2.1.0 (Modified with <<reset_playtime>>)
+
+    // options object:
+    var options = {
+        tryGlobal : true,
+        storyVar  : 'playtime',
+        pauseTag  : 'pausetimer'
+    };
+
+    State.variables[options.storyVar] = Date.now();
+
+    predisplay['start-playtime'] = function (t) {
+        delete predisplay[t]; // single use
+        // we need to grab a starting time so errors don't appear in user saves prior to adding this code:
+        if (!State.variables[options.storyVar]) {
+            State.variables[options.storyVar] = Date.now();
+        }
+    };
+
+    // pause tag handling
+    prehistory['pause-playtime'] = function (t) {
+        if (tags().includes(options.pauseTag)) {
+            State.variables[options.storyVar] += time();
+        }
+    };
+
+    // the function:
+    function _getMS () {
+        return (Date.now() - State.variables[options.storyVar]);
+    }
+
+    function _getTimeArray (ms) {
+        if (!ms || ms < 0 || typeof ms !== 'number') {
+            return;
+        }
+        
+        var time = [];
+        
+        time.push(Math.floor(ms / 1000) % 60); // second [0]
+        time.push(Math.floor(ms / 60000) % 60); // minutes [1]
+        time.push(Math.floor(ms / 3600000)); // hours [2]
+        
+        return time;
+    }
+
+    // set up valid args
+    var hourNames = ['h', 'hr', 'hrs', 'hour', 'hours'];
+    var minNames  = ['m', 'min', 'mins', 'minute', 'minutes'];
+    var secNames  = ['s', 'sec', 'secs', 'second', 'seconds'];
+
+    // user function
+    function _getPlayTime (m) {
+        var ms   = _getMS();
+        var time = _getTimeArray(ms);
+        if (hourNames.includes(m)) {
+            return time[2];
+        }
+        if (minNames.includes(m)) {
+            return time[1];
+        }
+        if (secNames.includes(m)) {
+            return time[0];
+        }
+        return ms;
+    }
+
+    function _formatTime (arr, fmt) {
+        if (!arr || !Array.isArray(arr) || arr.length < 3) {
+            return;
+        }
+        
+        var hr  = (arr[2] < 10) ? '0' + arr[2] : '' + arr[2],
+            min = (arr[1] < 10) ? '0' + arr[1] : '' + arr[1],
+            sec = (arr[0] < 10) ? '0' + arr[0] : '' + arr[0];
+            
+        if (fmt) {
+            return '<b>' + hr + ':' + min + '</b>' + ':' + sec;
+        }
+        return hr + ':' + min + ':' + sec;
+    }
+
+    function _outputPlaytime (fmt) {
+        var ms = _getMS();
+        return _formatTime(_getTimeArray(ms), fmt);
+    }
+
+    // setup API
+    setup.playTime = function (arg) {
+        if (typeof arg === 'string') {
+            return _getPlayTime(arg);
+        }
+        return _outputPlaytime(arg);
+    };
+
+    // global playTime() function
+    if (options.tryGlobal) {
+        window.playTime = window.playTime || setup.playTime;
+    }
+
+    // <<playtime>> macro
+    Macro.add('playtime', {
+        handler : function () {
+            var arr = this.args.map(function (arg) {
+                return String(arg).trim().toLowerCase();
+            });
+            var $wrapper = $(document.createElement('span'));
+            var fmt      = arr.includesAny(['format', 'f', 'fmt', 'b', 'bold', 'true']);
+            var string   = _outputPlaytime(fmt);
+
+            $wrapper
+                .wiki(string)
+                .addClass('macro-' + this.name)
+                .appendTo(this.output);
+        }
+    });
+
+    setup.stopLiveTimer = function () {
+        if (setup.liveTimerInterval) {
+            clearInterval(setup.liveTimerInterval);
+            setup.liveTimerInterval = null;
+        }
+    };
+
+    setup.updateLiveTimers = function () {
+        if (!State.variables.currentSimStart) {
+            setup.stopLiveTimer();
+            return;
+        }
+
+        var formatted = _outputPlaytime(true);
+        $('.sim-run-time-value').each(function () {
+            $(this).empty().wiki(formatted);
+        });
+    };
+
+    setup.startLiveTimer = function () {
+        setup.stopLiveTimer();
+        if (!State.variables.currentSimStart) {
+            return;
+        }
+        setup.updateLiveTimers();
+        setup.liveTimerInterval = setInterval(setup.updateLiveTimers, 1000);
+    };
+
+    setup.positionSimFooter = function () {
+        var $footer = jQuery('#sim-footer');
+        var $story = jQuery('#story');
+        if (!$footer.length || !$story.length) {
+            return;
+        }
+        var offset = $story.offset();
+        $footer.css({
+            left      : offset.left + 'px',
+            width     : $story.outerWidth() + 'px',
+            right     : 'auto',
+            maxWidth  : 'none'
+        });
+    };
+
+    setup.pinSimFooter = function () {
+        var $footer = jQuery('#sim-footer');
+        if (!$footer.length) {
+            jQuery('body').removeClass('sim-footer-active');
+            return;
+        }
+        if ($footer.parent()[0] !== document.body) {
+            $footer.detach().appendTo(document.body);
+        }
+        setup.positionSimFooter();
+        jQuery(window).off('.sim-footer-pos').on('resize.sim-footer-pos', setup.positionSimFooter);
+        jQuery(document).off('.sim-footer-pos').on(':uiupdate.sim-footer-pos', setup.positionSimFooter);
+        jQuery('body').addClass('sim-footer-active');
+    };
+
+    setup.unpinSimFooter = function () {
+        jQuery(window).off('.sim-footer-pos');
+        jQuery(document).off('.sim-footer-pos');
+        jQuery('#sim-footer').remove();
+        jQuery('body').removeClass('sim-footer-active');
+    };
+
+    $(document).on(':passageend', function (ev) {
+        setup.stopLiveTimer();
+        var passage = ev.passage;
+        if (passage && passage.tags && passage.tags.includes('sim') && !passage.tags.includes('pausetimer')) {
+            setup.pinSimFooter();
+            setup.startLiveTimer();
+        } else {
+            setup.unpinSimFooter();
+        }
+    });
+
+    // <<reset_playtime>> macro
+    Macro.add('reset_playtime', {
+        handler : function () {
+            State.variables[options.storyVar] = Date.now();
+        }
+    });
+
+}());
+
+/* Simulation framework macros (registered in StoryScript so they always load). */
+(function () {
+    'use strict';
+
+    setup.clearAssessmentVars = function () {
+        var sv = State.variables;
+        sv.neuro = '';
+        sv.cardiac = '';
+        sv.resp = '';
+        sv.gi = '';
+        sv.gu = '';
+        sv.musk = '';
+        sv.skin = '';
+        sv.heent = '';
+        sv.psych = '';
+        sv.vascularAccess = '';
+        sv.misc = '';
+    };
+
+    setup.backupAssessmentVars = function () {
+        var sv = State.variables;
+        sv.assessmentBackup = {
+            neuro           : sv.neuro,
+            cardiac         : sv.cardiac,
+            resp            : sv.resp,
+            gi              : sv.gi,
+            gu              : sv.gu,
+            musk            : sv.musk,
+            skin            : sv.skin,
+            heent           : sv.heent,
+            psych           : sv.psych,
+            vascularAccess  : sv.vascularAccess,
+            misc            : sv.misc
+        };
+    };
+
+    setup.restoreAssessmentVars = function () {
+        var sv = State.variables;
+        var backup = sv.assessmentBackup;
+        if (!backup) {
+            return;
+        }
+        sv.neuro = backup.neuro;
+        sv.cardiac = backup.cardiac;
+        sv.resp = backup.resp;
+        sv.gi = backup.gi;
+        sv.gu = backup.gu;
+        sv.musk = backup.musk;
+        sv.skin = backup.skin;
+        sv.heent = backup.heent;
+        sv.psych = backup.psych;
+        sv.vascularAccess = backup.vascularAccess;
+        sv.misc = backup.misc;
+    };
+
+    setup.runPassageSilently = function (passageName) {
+        var passage = Story.get(passageName);
+        if (!passage) {
+            throw new Error('passage "' + passageName + '" does not exist');
+        }
+        new Wikifier(null, passage.processText());
+    };
+
+    Macro.add('clearAssessment', {
+        handler : function () {
+            setup.clearAssessmentVars();
+        }
+    });
+
+    Macro.add('loadAssessmentDefaults', {
+        handler : function () {
+            if (!this.args[0]) {
+                return this.error('loadAssessmentDefaults requires a passage name');
+            }
+            try {
+                setup.clearAssessmentVars();
+                setup.runPassageSilently(this.args[0]);
+                setup.backupAssessmentVars();
+            } catch (err) {
+                return this.error(err.message || String(err));
+            }
+        }
+    });
+
+    Macro.add('displayAssessment', {
+        handler : function () {
+            var passage = Story.get('Assessment_Table');
+            if (!passage) {
+                return this.error('Assessment_Table passage does not exist');
+            }
+            new Wikifier(this.output, passage.processText());
+        }
+    });
+
+    /* Renders passage "{CurrentPassage}_ProgressLinks" in the pinned footer. */
+    Macro.add('displaySimProgressLinks', {
+        handler : function () {
+            var base = State.passage;
+            if (!base) {
+                return;
+            }
+            var linksPassage = base + '_ProgressLinks';
+            if (!Story.has(linksPassage)) {
+                return;
+            }
+            new Wikifier(this.output, Story.get(linksPassage).processText());
+        }
+    });
+
+    /* <<cacheSimAudio "trackId" "audio/file.mp3">> — cache sim-specific audio at _Start */
+    Macro.add('cacheSimAudio', {
+        handler : function () {
+            if (this.args.length < 2) {
+                return this.error('cacheSimAudio requires trackId and file path');
+            }
+            var trackId = String(this.args[0]).trim();
+            var path = String(this.args[1]).trim();
+            new Wikifier(null, '<<cacheaudio "' + trackId + '" "' + path + '">>');
+        }
+    });
+
+    Macro.add('launchSim', {
+        handler : function () {
+            if (this.args.length < 4) {
+                return this.error('launchSim requires: startPassage, patientName, patientDOB, patientAllergies, [returnHub]');
+            }
+
+            var sv = State.variables;
+            var startPassage = this.args[0];
+
+            sv.currentSimStart = startPassage;
+            sv.patientName = this.args[1];
+            sv.patientDOB = this.args[2];
+            sv.patientAllergies = this.args[3];
+            sv.simPatientBackup = {
+                name    : sv.patientName,
+                dob     : sv.patientDOB,
+                allergies : sv.patientAllergies
+            };
+
+            setup.clearAssessmentVars();
+            sv.returnHub = (this.args.length >= 5 && this.args[4]) ? this.args[4] : 'Start';
+            sv.playtime = Date.now();
+
+            Engine.play(startPassage);
+        }
+    });
+
+    Macro.add('repeatSim', {
+        handler : function () {
+            var sv = State.variables;
+
+            if (!sv.currentSimStart) {
+                return this.error('no simulation is active');
+            }
+
+            var patient = sv.simPatientBackup;
+            if (patient) {
+                sv.patientName = patient.name;
+                sv.patientDOB = patient.dob;
+                sv.patientAllergies = patient.allergies;
+            }
+
+            setup.restoreAssessmentVars();
+
+            sv.playtime = Date.now();
+            Engine.play(sv.currentSimStart);
+        }
+    });
+
+}());
+
+:: StoryStylesheet [stylesheet]
+.sim-header {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1em;
+	margin: 0;
+}
+/* Pinned sim footer (moved to body via setup.pinSimFooter on sim passages). */
+body.sim-footer-active #story {
+	padding-bottom: 32vh;
+	box-sizing: border-box;
+}
+.passage h1{
+    margin-top: 0;
+    padding-top: 0;
+}
+.passage h2{
+    margin-top: 0;
+    padding-top: 0;
+}
+.passage h3{
+    margin-top: 0;
+    padding-top: 0;
+}
+#sim-footer {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	z-index: 1000;
+	box-sizing: border-box;
+	margin: 0;
+	background-color: #111;
+	color: #eee;
+	padding: 0.5em 0.75em calc(0.6em + env(safe-area-inset-bottom, 0px));
+	border-top: 2px solid #444;
+	max-height: 32vh;
+	overflow-y: auto;
+	text-align: center;
+}
+
+/* Heading styles aligned with SugarCube passage h2 / h3 (wiki !! and !!!). */
+#sim-footer .sim-footer-heading {
+	font-size: 1.5em;
+	font-weight: bold;
+	line-height: 1.75;
+	margin: 0.67em 0 0.5em;
+	padding: 0;
+	color: #eee;
+	text-align: center;
+}
+
+#sim-footer .sim-footer-subheading {
+	font-size: 1.17em;
+	font-weight: bold;
+	line-height: 1.75;
+	margin: 0.5em 0 0.35em;
+	padding: 0;
+	color: #eee;
+	text-align: center;
+}
+
+#sim-footer .sim-footer-links {
+	margin-bottom: 0.5em;
+	text-align: center;
+}
+
+#sim-footer .sim-footer-links hr {
+	margin: 0.4em auto;
+	border: none;
+	border-top: 1px solid #444;
+	max-width: 54em;
+}
+
+#sim-footer .sim-footer-links a {
+	display: inline-block;
+	margin: 0.2em 0.5em;
+	color: #68d;
+}
+
+#sim-footer .sim-footer-links a:hover {
+	color: #8af;
+}
+
+#sim-footer .sim-footer-audio {
+	margin-top: 0.25em;
+}
+
+#sim-footer .sim-footer-audio-buttons {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 0.5em;
+}
+
+#sim-footer .sim-footer-audio-stop {
+	display: flex;
+	justify-content: center;
+	margin-top: 0.5em;
+	padding-top: 0.35em;
+	border-top: 1px solid #444;
+}
+
+#sim-footer .sim-footer-audio-buttons button {
+	margin: 0;
+}
+
+#sim-footer .sim-footer-audio-stop button {
+	margin: 0;
+	font-size: 1.15em;
+	font-weight: bold;
+	border: 3px solid #eee;
+	padding: 0.5em 1.25em;
+}
+
+#sim-footer .sim-footer-audio-stop button:hover {
+	border-color: #fff;
+	background-color: #57c;
+}
+.assessment-table {
+	border-collapse: collapse;
+	margin: 0.75em 0;
+	width: 100%;
+	max-width: 48em;
+}
+.assessment-table caption {
+	font-weight: bold;
+	text-align: left;
+	margin-bottom: 0.25em;
+}
+.assessment-table th,
+.assessment-table td {
+	border: 1px solid #888;
+	padding: 0.35em 0.5em;
+	vertical-align: top;
+	text-align: left;
+}
+.assessment-table th {
+	width: 11em;
+	background: #1a3a5c;
+	color: #fff;
+}
