@@ -127,4 +127,48 @@ You can use the Twine editor for visual layout, but this project is set up for *
 - **Footer progression links:** add a passage named `{PassageName}_ProgressLinks` with the `[[links]]` only.
 - **Sim audio:** `<<cacheSimAudio "track_id" "audio/file.mp3">>` on the sim’s `_Start` passage (track IDs must not contain spaces).
 - **Assessment table:** `<<displayAssessment>>` in sim passages; defaults in `{Sim}_AssessmentDefaults` passage.
+
+## CCEI 2.0 faculty sidebar (sim passages)
+
+On `[sim]` passages, the left UI bar shows the **Creighton Competency Evaluation Instrument (CCEI) 2.0**. Only competencies **1–25** are scored (0 / 1 / NA). Sim-specific text is **context only**—it does not add extra score rows.
+
+1. Add a config passage, e.g. `ExampleSim_CCEI`, with macros (no `[sim]` tag required).
+2. On sim start: `<<loadSimCCEI "ExampleSim_CCEI">>` (with `<<loadAssessmentDefaults>>`).
+
+```twee
+:: ExampleSim_CCEI
+<<cceiSimTitle "Example Simulation">>
+<<cceiContext "clinicalJudgment" "recognizeCues" "Faculty guidance for this subcategory...">>
+<<cceiNote 6 "student recognizes signs of nausea related to small bowel obstruction">>
+<<cceiExpandCategory "clinicalJudgment">>
+<<cceiExpandCategory "communication">>
+<<cceiShrinkItem 24>>
+```
+
+| Macro | Purpose |
+|-------|---------|
+| `<<cceiSimTitle "title">>` | Simulation name in the header and PDF (read-only in the panel) |
+| `<<cceiNote id "text">>` | Context under competency **id** (1–25); faculty still scores that item |
+| `<<cceiContext category subcategory "text">>` | Context above a Clinical Judgment subcategory block |
+| `<<cceiContext category "text">>` | Context for Communication / Quality & Safety / Professionalism (two args) |
+| `<<cceiExpandCategory id>>` | Include category (`clinicalJudgment`, `communication`, `qualitySafety`, `professionalism`) |
+| `<<cceiExpandSubcategory category subcategory>>` | Optional: only listed subcategories under Clinical Judgment |
+| `<<cceiShrinkItem n>>` | Omit competency **n** from this sim (excluded from totals) |
+
+If no `<<cceiExpandCategory>>` macros are listed, **all four** categories appear. If one or more are listed, **only** those categories appear. Scores persist while navigating sim passages; **Repeat Sim** restores the snapshot from sim start; **Main Menu** clears CCEI via `<<clearCCEI>>`.
+
+**Header** (stored in `$ccei`): centered simulation title (from `<<cceiSimTitle>>`); then student name, evaluator name, and evaluation date (defaults to today on a new sim run); then scoring guidelines (0 / 1 / NA, with a note that NA competencies are hidden by default when configured in the sim).
+
+### CCEI expand overlay (sidebar tray)
+
+During a sim, the **CCEI 2.0** tray sits in the left UI bar (mini earned/possible totals). The full evaluation form opens as an overlay over the passage area:
+
+- **Hover** the tray (desktop) — temporary preview; closes when the pointer leaves (unless pinned).
+- **Expand** — open the overlay until **Collapse**.
+- **Pin** — keep the overlay open while moving between passages; click **Pin** again to unpin.
+- **Collapse** (in the overlay header) — close the overlay and return to tray-only.
+
+The expanded form uses a **two-column layout**: competencies and scores on the left, subcategory and overall comments on the right (stacks on narrow screens). **Export PDF** at the bottom downloads a report via [html2pdf.js](https://github.com/eKoopmans/html2pdf.js) when online; if the CDN is blocked (offline or `file://`), the browser **Print** dialog opens so you can choose **Save as PDF**.
+
+Rebuild after `.twee` edits: `.\build.ps1`.
 </details>

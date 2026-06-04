@@ -54,9 +54,19 @@ Faculty or student playing the role of charge nurse should enter the room and st
 [[Return to course menu|$returnHub]]
 
 
+:: ExampleSim_CCEI
+<<cceiSimTitle "Example Simulation">>
+<<cceiContext "clinicalJudgment" "recognizeCues" "Identifies patient cues that require additional subjective assessment questions?">>
+<<cceiNote 6 "student recognizes signs of nausea related to small bowel obstruction">>
+<<cceiExpandCategory "clinicalJudgment">>
+<<cceiExpandCategory "communication">>
+<<cceiShrinkItem 24>>
+
+
 :: ExampleSim_Start [sim]
 <<cacheSimAudio "vomit" "audio/sims/example/vomit.mp3">>\
 <<loadAssessmentDefaults "ExampleSim_AssessmentDefaults">>\
+<<loadSimCCEI "ExampleSim_CCEI">>\
 <h2>Example Simulation — Start</h2>\
 ''Patient Script:''
 *Hi I don't feel so great.

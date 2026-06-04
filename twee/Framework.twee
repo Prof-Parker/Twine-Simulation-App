@@ -90,6 +90,7 @@ Nursing Simulation Framework
 	<<unset $currentSimStart>>
 	<<set $patientName to "", $patientDOB to "", $patientAllergies to "">>
 	<<clearAssessment>>
+	<<clearCCEI>>
 <</link>>
 
 
@@ -114,6 +115,8 @@ Nursing Simulation Framework
 <<set $vascularAccess to "">>
 <<set $misc to "">>
 <<set $assessmentBackup to {}>>
+<<set $ccei to { scores: {}, comments: {}, overall: "", studentName: "", evaluatorName: "", evalDate: "", simTitle: "" }>>
+<<set $cceiBackup to null>>
 
 <<cacheaudio "hold_music" "audio/common/hold_music.mp3">>
 <<cacheaudio "pa_announcement" "audio/common/move_your_car.mp3">>
@@ -292,6 +295,9 @@ Nursing Simulation Framework
             right     : 'auto',
             maxWidth  : 'none'
         });
+        if (setup.positionCCEIPanel) {
+            setup.positionCCEIPanel();
+        }
     };
 
     setup.pinSimFooter = function () {
@@ -327,8 +333,14 @@ Nursing Simulation Framework
         if (passage && passage.tags && passage.tags.includes('sim') && !passage.tags.includes('pausetimer')) {
             setup.pinSimFooter();
             setup.startLiveTimer();
+            if (setup.mountCCEIPanel) {
+                setup.mountCCEIPanel();
+            }
         } else {
             setup.unpinSimFooter();
+            if (setup.unmountCCEIPanel) {
+                setup.unmountCCEIPanel();
+            }
         }
     });
 
@@ -505,11 +517,976 @@ Nursing Simulation Framework
             }
 
             setup.restoreAssessmentVars();
+            setup.restoreCCEI();
 
             sv.playtime = Date.now();
             Engine.play(sv.currentSimStart);
         }
     });
+
+    /* ----- Creighton CCEI 2.0 sidebar (items 1–25 only) ----- */
+
+    setup.cceiCatalog = {
+        categories : [
+            {
+                id            : 'clinicalJudgment',
+                title         : 'CLINICAL JUDGMENT',
+                subcategories : [
+                    { id : 'recognizeCues', title : 'RECOGNIZE CUES', commentGroup : 'recognizeCues', itemIds : [1, 2, 3, 4, 5] },
+                    { id : 'analyzeCues', title : 'ANALYZE CUES', commentGroup : 'analyzeCues', itemIds : [6, 7, 8] },
+                    { id : 'prioritizeHypotheses', title : 'PRIORITIZE HYPOTHESES', commentGroup : 'prioritizeHypotheses', itemIds : [9, 10] },
+                    { id : 'generateSolutions', title : 'GENERATE SOLUTIONS', commentGroup : 'generateSolutions', itemIds : [11, 12] },
+                    { id : 'takeActions', title : 'TAKE ACTIONS', commentGroup : 'takeActions', itemIds : [13, 14] },
+                    { id : 'evaluateOutcomes', title : 'EVALUATE OUTCOMES', commentGroup : 'evaluateOutcomes', itemIds : [15, 16, 17] }
+                ]
+            },
+            {
+                id            : 'communication',
+                title         : 'COMMUNICATION',
+                subcategories : null,
+                commentGroup  : 'communication',
+                itemIds       : [18, 19, 20]
+            },
+            {
+                id            : 'qualitySafety',
+                title         : 'QUALITY & SAFETY',
+                subcategories : null,
+                commentGroup  : 'qualitySafety',
+                itemIds       : [21, 22, 23]
+            },
+            {
+                id            : 'professionalism',
+                title         : 'PROFESSIONALISM',
+                subcategories : null,
+                commentGroup  : 'professionalism',
+                itemIds       : [24, 25]
+            }
+        ],
+        items : {
+            1  : { label : '1. Obtains Pertinent Subjective Data.' },
+            2  : { label : '2. Obtains Pertinent Objective Data.' },
+            3  : { label : '3. Assesses the Environment.' },
+            4  : { label : '4. Assesses Factors Affecting Health.' },
+            5  : { label : '5. Recognizes Variances/Pertinent Data.' },
+            6  : { label : '6. Interprets Subjective Data.' },
+            7  : { label : '7. Interprets Objective Data.' },
+            8  : { label : '8. Identifies Cause(s) of Problem.' },
+            9  : { label : '9. Identifies Expected Outcomes.' },
+            10 : { label : '10. Prioritizes Interventions.' },
+            11 : { label : '11. Generates Plan.' },
+            12 : { label : '12. Reassesses Pertinent Data.' },
+            13 : { label : '13. Manages Equipment and/or Devices Involved in Care.' },
+            14 : { label : '14. Implements Evidence-Based Interventions.' },
+            15 : { label : '15. Evaluates Interventions in relation to Expected Outcomes.' },
+            16 : { label : '16. Modifies Expected Outcomes, Assessments, and/or Interventions.' },
+            17 : { label : '17. Demonstrates Reflective Practice.' },
+            18 : { label : '18. Communicates Professionally.' },
+            19 : { label : '19. Communicates Therapeutically.' },
+            20 : { label : '20. Documents Clearly, Concisely, Accurately, Efficiently.' },
+            21 : { label : '21. Integrates Informatics to Support Decision-Making.' },
+            22 : { label : '22. Adheres to Principles of Patient Safety.' },
+            23 : { label : '23. Advocates for Client.' },
+            24 : { label : '24. Adheres to Legal and Ethical Standards of Care.' },
+            25 : { label : '25. Demonstrates Professional Behavior.' }
+        }
+    };
+
+    setup._cceiEsc = function (text) {
+        return String(text == null ? '' : text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    };
+
+    setup.beginSimCCEIConfig = function () {
+        setup._simCCEIConfig = {
+            notes               : {},
+            context             : {},
+            expandCategories    : [],
+            expandSubcategories : {},
+            shrinkItems         : [],
+            simTitle            : ''
+        };
+    };
+
+    setup.finalizeSimCCEIConfig = function () {
+        var raw = setup._simCCEIConfig || {};
+        var allCatIds = setup.cceiCatalog.categories.map(function (c) {
+            return c.id;
+        });
+        var expandCategories = raw.expandCategories.length
+            ? raw.expandCategories.slice()
+            : allCatIds.slice();
+        return {
+            notes               : Object.assign({}, raw.notes),
+            context             : Object.assign({}, raw.context),
+            expandCategories    : expandCategories,
+            expandSubcategories : Object.assign({}, raw.expandSubcategories),
+            shrinkItems         : raw.shrinkItems.slice(),
+            simTitle            : raw.simTitle || ''
+        };
+    };
+
+    setup._cceiFormatDateISO = function (date) {
+        var y = date.getFullYear();
+        var m = date.getMonth() + 1;
+        var d = date.getDate();
+        return y + '-' + (m < 10 ? '0' : '') + m + '-' + (d < 10 ? '0' : '') + d;
+    };
+
+    setup._cceiTodayISO = function () {
+        return setup._cceiFormatDateISO(new Date());
+    };
+
+    setup._cceiEmptyState = function () {
+        return {
+            scores      : {},
+            comments    : {},
+            overall     : '',
+            studentName   : '',
+            evaluatorName : '',
+            evalDate      : setup._cceiTodayISO(),
+            simTitle      : ''
+        };
+    };
+
+    setup.initCCEIState = function (reset) {
+        var sv = State.variables;
+        if (reset || !sv.ccei) {
+            sv.ccei = setup._cceiEmptyState();
+        } else if (!sv.ccei.evalDate) {
+            sv.ccei.evalDate = setup._cceiTodayISO();
+        }
+    };
+
+    setup.backupCCEI = function () {
+        var sv = State.variables;
+        if (!sv.ccei) {
+            return;
+        }
+        sv.cceiBackup = JSON.parse(JSON.stringify(sv.ccei));
+    };
+
+    setup.restoreCCEI = function () {
+        var sv = State.variables;
+        if (sv.cceiBackup) {
+            sv.ccei = JSON.parse(JSON.stringify(sv.cceiBackup));
+        }
+    };
+
+    setup.clearCCEI = function () {
+        var sv = State.variables;
+        sv.ccei = setup._cceiEmptyState();
+        sv.cceiBackup = null;
+        setup.activeCCEI = null;
+        setup.unmountCCEIPanel();
+        jQuery('#ccei-export-root').remove();
+    };
+
+    setup._cceiContextKey = function (category, subcategory) {
+        return category + '|' + (subcategory || '');
+    };
+
+    setup._cceiItemMeta = function (itemId) {
+        var id = Number(itemId);
+        var cats = setup.cceiCatalog.categories;
+        var i, j, cat, sub;
+        for (i = 0; i < cats.length; i++) {
+            cat = cats[i];
+            if (cat.subcategories) {
+                for (j = 0; j < cat.subcategories.length; j++) {
+                    sub = cat.subcategories[j];
+                    if (sub.itemIds.indexOf(id) !== -1) {
+                        return { categoryId : cat.id, subcategoryId : sub.id };
+                    }
+                }
+            } else if (cat.itemIds.indexOf(id) !== -1) {
+                return { categoryId : cat.id, subcategoryId : null };
+            }
+        }
+        return null;
+    };
+
+    setup.isCCEIItemVisible = function (itemId, config) {
+        config = config || setup.activeCCEI;
+        if (!config) {
+            return false;
+        }
+        var id = Number(itemId);
+        if (config.shrinkItems.indexOf(id) !== -1) {
+            return false;
+        }
+        var meta = setup._cceiItemMeta(id);
+        if (!meta) {
+            return false;
+        }
+        if (config.expandCategories.indexOf(meta.categoryId) === -1) {
+            return false;
+        }
+        var subFilter = config.expandSubcategories[meta.categoryId];
+        if (subFilter && subFilter.length && meta.subcategoryId) {
+            return subFilter.indexOf(meta.subcategoryId) !== -1;
+        }
+        return true;
+    };
+
+    setup.isCCEISubcategoryVisible = function (categoryId, subcategoryId, config) {
+        config = config || setup.activeCCEI;
+        if (!config || config.expandCategories.indexOf(categoryId) === -1) {
+            return false;
+        }
+        var subFilter = config.expandSubcategories[categoryId];
+        if (!subFilter || !subFilter.length) {
+            return true;
+        }
+        return subFilter.indexOf(subcategoryId) !== -1;
+    };
+
+    setup.computeCCEITotals = function () {
+        var config = setup.activeCCEI;
+        var sv = State.variables;
+        if (!config || !sv.ccei) {
+            return { earned : 0, possible : 0, percent : '0' };
+        }
+        var earned = 0;
+        var possible = 0;
+        var id, val;
+        for (id = 1; id <= 25; id++) {
+            if (!setup.isCCEIItemVisible(id, config)) {
+                continue;
+            }
+            val = sv.ccei.scores[String(id)];
+            if (!val) {
+                continue;
+            }
+            if (val === '1') {
+                earned += 1;
+                possible += 1;
+            } else if (val === '0') {
+                possible += 1;
+            }
+        }
+        var pct = possible > 0 ? ((earned / possible) * 100).toFixed(2) : '0';
+        return { earned : earned, possible : possible, percent : pct };
+    };
+
+    setup.updateCCEITotals = function () {
+        var t = setup.computeCCEITotals();
+        jQuery('#sim-ccei-panel .ccei-total-earned').text(t.earned);
+        jQuery('#sim-ccei-panel .ccei-total-possible').text(t.possible);
+        jQuery('#sim-ccei-panel .ccei-total-percent').text(t.percent);
+        jQuery('#sim-ccei-tray .ccei-tray-earned').text(t.earned);
+        jQuery('#sim-ccei-tray .ccei-tray-possible').text(t.possible);
+    };
+
+    setup._cceiClearOverlayClasses = function () {
+        jQuery('body').removeClass('sim-ccei-hover sim-ccei-expanded sim-ccei-pinned');
+    };
+
+    setup.updateCCEIChrome = function () {
+        var pinned = jQuery('body').hasClass('sim-ccei-pinned');
+        var expanded = jQuery('body').hasClass('sim-ccei-expanded') || pinned || jQuery('body').hasClass('sim-ccei-hover');
+        jQuery('#sim-ccei-panel .ccei-pinned-badge').toggle(pinned);
+        jQuery('#sim-ccei-tray .ccei-pin-btn').toggleClass('is-active', pinned);
+        jQuery('#sim-ccei-tray .ccei-expand-btn').toggleClass('is-active', expanded && !pinned);
+    };
+
+    setup.positionCCEIPanel = function () {
+        var $bar = jQuery('#ui-bar');
+        var $panel = jQuery('#sim-ccei-panel');
+        var $footer = jQuery('body > #sim-footer');
+        if (!$panel.length) {
+            return;
+        }
+        if ($bar.length) {
+            $panel.css('left', $bar.outerWidth() + 'px');
+        }
+        if ($footer.length && jQuery('body').hasClass('sim-footer-active')) {
+            $panel.css('bottom', $footer.outerHeight() + 'px');
+        } else {
+            $panel.css('bottom', '0');
+        }
+    };
+
+    setup.syncCCEIPanelFromState = function () {
+        var sv = State.variables;
+        if (!sv.ccei) {
+            return;
+        }
+        var $panel = jQuery('#sim-ccei-panel');
+        var id, val, group;
+        $panel.find('input[type="radio"]').each(function () {
+            id = this.name.replace('ccei-item', '');
+            val = sv.ccei.scores[id];
+            if (val && this.value === val) {
+                this.checked = true;
+            }
+        });
+        $panel.find('.ccei-subcomment').each(function () {
+            group = this.getAttribute('data-group');
+            if (group && sv.ccei.comments[group] != null) {
+                this.value = sv.ccei.comments[group];
+            }
+        });
+        var $overall = $panel.find('.ccei-overall-comment');
+        if ($overall.length) {
+            $overall.val(sv.ccei.overall || '');
+        }
+        var $student = $panel.find('.ccei-student-name');
+        if ($student.length) {
+            $student.val(sv.ccei.studentName || '');
+        }
+        var $evaluator = $panel.find('.ccei-evaluator-name');
+        if ($evaluator.length) {
+            $evaluator.val(sv.ccei.evaluatorName || '');
+        }
+        var $date = $panel.find('.ccei-eval-date');
+        if ($date.length) {
+            $date.val(sv.ccei.evalDate || setup._cceiTodayISO());
+        }
+        $panel.find('.ccei-sim-title').text(sv.ccei.simTitle || '');
+    };
+
+    setup._cceiRenderItemRow = function (itemId, config) {
+        if (!setup.isCCEIItemVisible(itemId, config)) {
+            return '';
+        }
+        var item = setup.cceiCatalog.items[itemId];
+        var note = config.notes[String(itemId)];
+        var name = 'ccei-item' + itemId;
+        var html = '<div class="ccei-item-row">';
+        html += '<div class="ccei-item-label">' + setup._cceiEsc(item.label);
+        if (note) {
+            html += '<div class="ccei-item-note">' + setup._cceiEsc(note) + '</div>';
+        }
+        html += '</div>';
+        html += '<div class="ccei-item-scores">';
+        ['0', '1', 'NA'].forEach(function (v) {
+            html += '<label class="ccei-score-label"><input type="radio" name="' + name + '" value="' + v + '"> ' + v + '</label>';
+        });
+        html += '</div></div>';
+        return html;
+    };
+
+    setup.buildCCEIScoringKeyHTML = function () {
+        return ''
+            + '<p class="ccei-scoring-key">'
+            + '<strong>0</strong> Below threshold · <strong>1</strong> Meets threshold · <strong>NA</strong> Not applicable. '
+            + 'Note: NA competencies are assigned during simulation creation and are hidden by default.'
+            + '</p>';
+    };
+
+    setup.buildCCEIMetaHTML = function () {
+        var sv = State.variables;
+        var c = sv.ccei || {};
+        var student = setup._cceiEsc(c.studentName || '');
+        var evaluator = setup._cceiEsc(c.evaluatorName || '');
+        var evalDate = setup._cceiEsc(c.evalDate || setup._cceiTodayISO());
+        var simTitle = setup._cceiEsc(c.simTitle || '');
+        return ''
+            + '<div class="ccei-meta">'
+            + '<div class="ccei-meta-row ccei-meta-sim-row"><span class="ccei-sim-title">' + simTitle + '</span></div>'
+            + '<div class="ccei-meta-row ccei-meta-fields-row">'
+            + '<label class="ccei-meta-field">Student name <input type="text" class="ccei-student-name" value="' + student + '"></label>'
+            + '<label class="ccei-meta-field">Evaluator name <input type="text" class="ccei-evaluator-name" value="' + evaluator + '"></label>'
+            + '<label class="ccei-meta-field">Evaluation date <input type="date" class="ccei-eval-date" value="' + evalDate + '"></label>'
+            + '</div>'
+            + setup.buildCCEIScoringKeyHTML()
+            + '</div>';
+    };
+
+    setup.buildCCEIScoresHTML = function () {
+        var config = setup.activeCCEI;
+        if (!config) {
+            return '';
+        }
+        var html = '';
+        setup.cceiCatalog.categories.forEach(function (cat) {
+            if (config.expandCategories.indexOf(cat.id) === -1) {
+                return;
+            }
+            html += '<details class="ccei-category" open><summary class="ccei-category-title">' + setup._cceiEsc(cat.title) + '</summary>';
+            if (cat.subcategories) {
+                cat.subcategories.forEach(function (sub) {
+                    if (!setup.isCCEISubcategoryVisible(cat.id, sub.id, config)) {
+                        return;
+                    }
+                    var ctxKey = setup._cceiContextKey(cat.id, sub.id);
+                    var ctx = config.context[ctxKey];
+                    html += '<details class="ccei-subcategory" open><summary class="ccei-subcategory-title">' + setup._cceiEsc(sub.title) + '</summary>';
+                    if (ctx) {
+                        html += '<div class="ccei-context-block">' + setup._cceiEsc(ctx) + '</div>';
+                    }
+                    sub.itemIds.forEach(function (itemId) {
+                        html += setup._cceiRenderItemRow(itemId, config);
+                    });
+                    html += '</details>';
+                });
+            } else {
+                var flatKey = setup._cceiContextKey(cat.id, '');
+                var flatCtx = config.context[flatKey];
+                if (flatCtx) {
+                    html += '<div class="ccei-context-block">' + setup._cceiEsc(flatCtx) + '</div>';
+                }
+                cat.itemIds.forEach(function (itemId) {
+                    html += setup._cceiRenderItemRow(itemId, config);
+                });
+            }
+            html += '</details>';
+        });
+        return html;
+    };
+
+    setup.buildCCEICommentsHTML = function () {
+        var config = setup.activeCCEI;
+        if (!config) {
+            return '';
+        }
+        var html = '<div class="ccei-col-comments-inner">';
+        setup.cceiCatalog.categories.forEach(function (cat) {
+            if (config.expandCategories.indexOf(cat.id) === -1) {
+                return;
+            }
+            if (cat.subcategories) {
+                cat.subcategories.forEach(function (sub) {
+                    if (!setup.isCCEISubcategoryVisible(cat.id, sub.id, config)) {
+                        return;
+                    }
+                    html += '<div class="ccei-comment-block">';
+                    html += '<label class="ccei-comment-label">' + setup._cceiEsc(cat.title) + ' — ' + setup._cceiEsc(sub.title) + '</label>';
+                    html += '<textarea class="ccei-subcomment" data-group="' + setup._cceiEsc(sub.commentGroup) + '" rows="3" placeholder="Comments for ' + setup._cceiEsc(sub.title) + '..."></textarea>';
+                    html += '</div>';
+                });
+            } else {
+                html += '<div class="ccei-comment-block">';
+                html += '<label class="ccei-comment-label">' + setup._cceiEsc(cat.title) + '</label>';
+                html += '<textarea class="ccei-subcomment" data-group="' + setup._cceiEsc(cat.commentGroup) + '" rows="3" placeholder="Comments..."></textarea>';
+                html += '</div>';
+            }
+        });
+        html += '<label class="ccei-comment-label">Overall comments</label>';
+        html += '<textarea class="ccei-overall-comment" rows="4" placeholder="Overall evaluation comments..."></textarea>';
+        html += '</div>';
+        return html;
+    };
+
+    setup.buildCCEIContentHTML = function () {
+        var config = setup.activeCCEI;
+        if (!config) {
+            return '';
+        }
+        var html = setup.buildCCEIMetaHTML();
+        html += '<div class="ccei-split-layout">';
+        html += '<div class="ccei-col-scores">' + setup.buildCCEIScoresHTML() + '</div>';
+        html += '<div class="ccei-col-comments">' + setup.buildCCEICommentsHTML() + '</div>';
+        html += '</div>';
+        html += '<div class="ccei-totals"><div>Earned: <span class="ccei-total-earned">0</span></div>';
+        html += '<div>Possible: <span class="ccei-total-possible">0</span></div>';
+        html += '<div>Percent: <span class="ccei-total-percent">0</span>%</div></div>';
+        html += '<div class="ccei-export-row"><button type="button" class="ccei-export-pdf-btn">Export PDF</button></div>';
+        html += '<p class="ccei-copyright">Copyright Creighton University. All rights reserved.</p>';
+        return html;
+    };
+
+    setup._cceiSanitizeFilename = function (s) {
+        var out = String(s || 'CCEI').replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '');
+        return out || 'CCEI';
+    };
+
+    setup._cceiExportItemRow = function (itemId, config) {
+        if (!setup.isCCEIItemVisible(itemId, config)) {
+            return '';
+        }
+        var sv = State.variables;
+        var item = setup.cceiCatalog.items[itemId];
+        var note = config.notes[String(itemId)];
+        var score = (sv.ccei && sv.ccei.scores[String(itemId)]) || '—';
+        var html = '<div class="ccei-export-item">';
+        html += '<div class="ccei-export-item-label"><strong>' + itemId + '.</strong> ' + setup._cceiEsc(item.label);
+        if (note) {
+            html += '<div class="ccei-export-item-note">' + setup._cceiEsc(note) + '</div>';
+        }
+        html += '</div><div class="ccei-export-item-score">' + setup._cceiEsc(score) + '</div></div>';
+        return html;
+    };
+
+    setup.buildCCEIExportHTML = function () {
+        var config = setup.activeCCEI;
+        var sv = State.variables;
+        if (!config || !sv.ccei) {
+            return '';
+        }
+        var c = sv.ccei;
+        var totals = setup.computeCCEITotals();
+        var html = '<div class="ccei-export-doc">';
+        html += '<h2>CCEI 2.0 Evaluation</h2>';
+        html += '<div class="ccei-export-sim-row">' + setup._cceiEsc(c.simTitle || '') + '</div>';
+        html += '<table class="ccei-export-meta"><tbody>';
+        html += '<tr><th>Student</th><td>' + setup._cceiEsc(c.studentName || '') + '</td>';
+        html += '<th>Evaluator</th><td>' + setup._cceiEsc(c.evaluatorName || '') + '</td>';
+        html += '<th>Date</th><td>' + setup._cceiEsc(c.evalDate || '') + '</td></tr>';
+        html += '</tbody></table>';
+        html += '<div class="ccei-export-split">';
+        html += '<div class="ccei-export-scores"><h3>Competencies</h3>';
+        setup.cceiCatalog.categories.forEach(function (cat) {
+            if (config.expandCategories.indexOf(cat.id) === -1) {
+                return;
+            }
+            html += '<h4>' + setup._cceiEsc(cat.title) + '</h4>';
+            if (cat.subcategories) {
+                cat.subcategories.forEach(function (sub) {
+                    if (!setup.isCCEISubcategoryVisible(cat.id, sub.id, config)) {
+                        return;
+                    }
+                    var ctxKey = setup._cceiContextKey(cat.id, sub.id);
+                    var ctx = config.context[ctxKey];
+                    html += '<h5>' + setup._cceiEsc(sub.title) + '</h5>';
+                    if (ctx) {
+                        html += '<p class="ccei-export-context">' + setup._cceiEsc(ctx) + '</p>';
+                    }
+                    sub.itemIds.forEach(function (itemId) {
+                        html += setup._cceiExportItemRow(itemId, config);
+                    });
+                });
+            } else {
+                var flatKey = setup._cceiContextKey(cat.id, '');
+                var flatCtx = config.context[flatKey];
+                if (flatCtx) {
+                    html += '<p class="ccei-export-context">' + setup._cceiEsc(flatCtx) + '</p>';
+                }
+                cat.itemIds.forEach(function (itemId) {
+                    html += setup._cceiExportItemRow(itemId, config);
+                });
+            }
+        });
+        html += '</div><div class="ccei-export-comments"><h3>Comments</h3>';
+        setup.cceiCatalog.categories.forEach(function (cat) {
+            if (config.expandCategories.indexOf(cat.id) === -1) {
+                return;
+            }
+            if (cat.subcategories) {
+                cat.subcategories.forEach(function (sub) {
+                    if (!setup.isCCEISubcategoryVisible(cat.id, sub.id, config)) {
+                        return;
+                    }
+                    var text = c.comments[sub.commentGroup] || '';
+                    html += '<div class="ccei-export-comment-block"><strong>' + setup._cceiEsc(cat.title) + ' — ' + setup._cceiEsc(sub.title) + '</strong>';
+                    html += '<p>' + setup._cceiEsc(text).replace(/\n/g, '<br>') + '</p></div>';
+                });
+            } else {
+                var flatText = c.comments[cat.commentGroup] || '';
+                html += '<div class="ccei-export-comment-block"><strong>' + setup._cceiEsc(cat.title) + '</strong>';
+                html += '<p>' + setup._cceiEsc(flatText).replace(/\n/g, '<br>') + '</p></div>';
+            }
+        });
+        html += '<div class="ccei-export-comment-block"><strong>Overall comments</strong>';
+        html += '<p>' + setup._cceiEsc(c.overall || '').replace(/\n/g, '<br>') + '</p></div>';
+        html += '</div></div>';
+        html += '<div class="ccei-export-totals">Earned: ' + totals.earned + ' · Possible: ' + totals.possible + ' · Percent: ' + totals.percent + '%</div>';
+        html += '<p class="ccei-export-copyright">Copyright Creighton University. All rights reserved.</p>';
+        html += '</div>';
+        return html;
+    };
+
+    setup._cceiExportPrintCSS = function () {
+        return ''
+            + 'body{font-family:Georgia,serif;margin:1em;color:#111;}'
+            + 'h2{margin:0 0 0.5em;}h3,h4,h5{margin:0.6em 0 0.25em;}'
+            + '.ccei-export-sim-row{text-align:center;font-size:1.2em;font-weight:bold;margin:0.25em 0 0.75em;}'
+            + '.ccei-export-meta{width:100%;border-collapse:collapse;margin-bottom:1em;}'
+            + '.ccei-export-meta th{text-align:left;padding:0.25em 0.5em 0.25em 0;}'
+            + '.ccei-export-meta td{padding:0.25em 0.5em 0.25em 0;}'
+            + '.ccei-export-split{display:grid;grid-template-columns:1fr 1fr;gap:1em;align-items:start;}'
+            + '.ccei-export-item{display:flex;justify-content:space-between;border-bottom:1px solid #ccc;padding:0.35em 0;gap:0.5em;}'
+            + '.ccei-export-item-label{flex:1;}'
+            + '.ccei-export-item-note{font-style:italic;color:#444;font-size:0.95em;}'
+            + '.ccei-export-item-score{font-weight:bold;white-space:nowrap;}'
+            + '.ccei-export-context{font-style:italic;color:#333;margin:0.25em 0;}'
+            + '.ccei-export-comment-block{margin-bottom:0.75em;}'
+            + '.ccei-export-totals{margin-top:1em;font-weight:bold;}'
+            + '.ccei-export-copyright{font-size:0.85em;color:#666;text-align:center;margin-top:1em;}';
+    };
+
+    setup.printCCEIReport = function () {
+        var body = setup.buildCCEIExportHTML();
+        if (!body) {
+            return;
+        }
+        var w = window.open('', '_blank');
+        if (!w) {
+            return;
+        }
+        w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>CCEI Export</title>');
+        w.document.write('<style>' + setup._cceiExportPrintCSS() + '@media print{body{margin:0.5in;}}</style></head><body>');
+        w.document.write(body);
+        w.document.write('</body></html>');
+        w.document.close();
+        w.focus();
+        setTimeout(function () {
+            w.print();
+        }, 300);
+    };
+
+    setup.exportCCEIPdf = function () {
+        var body = setup.buildCCEIExportHTML();
+        if (!body) {
+            return;
+        }
+        var sv = State.variables;
+        var filename = 'CCEI-' + setup._cceiSanitizeFilename(sv.ccei && sv.ccei.simTitle) + '.pdf';
+        if (typeof window.html2pdf === 'function') {
+            jQuery('#ccei-export-root').remove();
+            var $root = jQuery('<div id="ccei-export-root" class="ccei-export-root"></div>');
+            $root.html(body).css({
+                position   : 'fixed',
+                left       : '-10000px',
+                top        : '0',
+                width      : '800px',
+                background : '#fff',
+                color      : '#111',
+                padding    : '1em',
+                zIndex     : '-1'
+            });
+            jQuery('head').append(jQuery('<style id="ccei-export-inline-css"></style>').text(setup._cceiExportPrintCSS()));
+            jQuery(document.body).append($root);
+            window.html2pdf().set({
+                margin      : 10,
+                filename    : filename,
+                image       : { type : 'jpeg', quality : 0.98 },
+                html2canvas : { scale : 2, useCORS : true },
+                jsPDF       : { unit : 'mm', format : 'letter', orientation : 'portrait' }
+            }).from($root[0]).save().then(function () {
+                $root.remove();
+                jQuery('#ccei-export-inline-css').remove();
+            }).catch(function () {
+                $root.remove();
+                jQuery('#ccei-export-inline-css').remove();
+                setup.printCCEIReport();
+            });
+            return;
+        }
+        setup.printCCEIReport();
+    };
+
+    setup.buildCCEITrayHTML = function () {
+        return ''
+            + '<div id="sim-ccei-tray" class="sim-ccei-tray">'
+            + '<h4 class="ccei-tray-title">CCEI 2.0</h4>'
+            + '<p class="ccei-tray-totals">Earned <span class="ccei-tray-earned">0</span> / <span class="ccei-tray-possible">0</span></p>'
+            + '<div class="ccei-tray-buttons">'
+            + '<button type="button" class="ccei-expand-btn">Expand</button>'
+            + '<button type="button" class="ccei-pin-btn">Pin</button>'
+            + '</div></div>';
+    };
+
+    setup.buildCCEIPanelHTML = function () {
+        var inner = setup.buildCCEIContentHTML();
+        if (!inner) {
+            return '';
+        }
+        return ''
+            + '<div id="sim-ccei-panel" class="sim-ccei-panel">'
+            + '<div class="ccei-panel-header">'
+            + '<button type="button" class="ccei-collapse-btn">Collapse</button>'
+            + '<h3 class="ccei-title">CCEI 2.0</h3>'
+            + '<span class="ccei-pinned-badge">Pinned</span>'
+            + '</div>'
+            + '<div class="ccei-panel-body">' + inner + '</div>'
+            + '</div>';
+    };
+
+    setup.collapseCCEIOverlay = function () {
+        setup._cceiClearOverlayClasses();
+        setup.updateCCEIChrome();
+    };
+
+    setup.mountCCEIPanel = function (forceRebuild) {
+        if (setup._cceiForceRebuild) {
+            forceRebuild = true;
+            setup._cceiForceRebuild = false;
+        }
+        if (!setup.activeCCEI) {
+            setup.unmountCCEIPanel();
+            return;
+        }
+        var $uiBody = jQuery('#ui-bar-body');
+        if (!$uiBody.length) {
+            return;
+        }
+        if (jQuery('#sim-ccei-panel').length && jQuery('#sim-ccei-tray').length && !forceRebuild) {
+            setup.syncCCEIPanelFromState();
+            setup.updateCCEITotals();
+            setup.positionCCEIPanel();
+            setup.updateCCEIChrome();
+            return;
+        }
+        var wasPinned = jQuery('body').hasClass('sim-ccei-pinned');
+        var wasExpanded = jQuery('body').hasClass('sim-ccei-expanded');
+        setup.unmountCCEIPanel();
+        $uiBody.append(setup.buildCCEITrayHTML());
+        jQuery(document.body).append(setup.buildCCEIPanelHTML());
+        jQuery('body').addClass('sim-ccei-active');
+        if (wasPinned) {
+            jQuery('body').addClass('sim-ccei-pinned sim-ccei-expanded');
+        } else if (wasExpanded) {
+            jQuery('body').addClass('sim-ccei-expanded');
+        }
+        setup.positionCCEIPanel();
+        jQuery(window).off('.ccei-panel-pos').on('resize.ccei-panel-pos', setup.positionCCEIPanel);
+        jQuery(document).off('.ccei-panel-pos').on(':uiupdate.ccei-panel-pos', setup.positionCCEIPanel);
+        setup.syncCCEIPanelFromState();
+        setup.updateCCEITotals();
+        setup.updateCCEIChrome();
+    };
+
+    setup.unmountCCEIPanel = function () {
+        jQuery(window).off('.ccei-panel-pos');
+        jQuery(document).off('.ccei-panel-pos');
+        if (setup._cceiHoverLeaveTimer) {
+            clearTimeout(setup._cceiHoverLeaveTimer);
+            setup._cceiHoverLeaveTimer = null;
+        }
+        jQuery('#sim-ccei-panel').remove();
+        jQuery('#sim-ccei-tray').remove();
+        setup._cceiClearOverlayClasses();
+        jQuery('body').removeClass('sim-ccei-active');
+    };
+
+    if (!setup._cceiEventsBound) {
+        setup._cceiEventsBound = true;
+        jQuery(document).on('change', '#sim-ccei-panel input[type="radio"]', function () {
+            var sv = State.variables;
+            if (!sv.ccei) {
+                return;
+            }
+            var id = this.name.replace('ccei-item', '');
+            sv.ccei.scores[id] = this.value;
+            setup.updateCCEITotals();
+        });
+        jQuery(document).on('input', '#sim-ccei-panel .ccei-subcomment', function () {
+            var sv = State.variables;
+            var group = this.getAttribute('data-group');
+            if (!sv.ccei || !group) {
+                return;
+            }
+            sv.ccei.comments[group] = this.value;
+        });
+        jQuery(document).on('input', '#sim-ccei-panel .ccei-overall-comment', function () {
+            var sv = State.variables;
+            if (!sv.ccei) {
+                return;
+            }
+            sv.ccei.overall = this.value;
+        });
+        jQuery(document).on('input', '#sim-ccei-panel .ccei-student-name', function () {
+            var sv = State.variables;
+            if (!sv.ccei) {
+                return;
+            }
+            sv.ccei.studentName = this.value;
+        });
+        jQuery(document).on('input', '#sim-ccei-panel .ccei-evaluator-name', function () {
+            var sv = State.variables;
+            if (!sv.ccei) {
+                return;
+            }
+            sv.ccei.evaluatorName = this.value;
+        });
+        jQuery(document).on('change', '#sim-ccei-panel .ccei-eval-date', function () {
+            var sv = State.variables;
+            if (!sv.ccei) {
+                return;
+            }
+            sv.ccei.evalDate = this.value;
+        });
+        jQuery(document).on('click', '#sim-ccei-panel .ccei-export-pdf-btn', function (ev) {
+            ev.preventDefault();
+            setup.exportCCEIPdf();
+        });
+        jQuery(document).on('mouseenter.ccei', '#sim-ccei-tray, #sim-ccei-panel', function () {
+            if (setup._cceiHoverLeaveTimer) {
+                clearTimeout(setup._cceiHoverLeaveTimer);
+                setup._cceiHoverLeaveTimer = null;
+            }
+            if (!jQuery('body').hasClass('sim-ccei-pinned') && !jQuery('body').hasClass('sim-ccei-expanded')) {
+                jQuery('body').addClass('sim-ccei-hover');
+                setup.updateCCEIChrome();
+            }
+        });
+        jQuery(document).on('mouseleave.ccei', '#sim-ccei-tray, #sim-ccei-panel', function () {
+            if (jQuery('body').hasClass('sim-ccei-pinned') || jQuery('body').hasClass('sim-ccei-expanded')) {
+                return;
+            }
+            setup._cceiHoverLeaveTimer = setTimeout(function () {
+                jQuery('body').removeClass('sim-ccei-hover');
+                setup.updateCCEIChrome();
+            }, 250);
+        });
+        jQuery(document).on('click', '#sim-ccei-tray .ccei-expand-btn', function (ev) {
+            ev.preventDefault();
+            if (jQuery('body').hasClass('sim-ccei-expanded') && !jQuery('body').hasClass('sim-ccei-pinned')) {
+                setup.collapseCCEIOverlay();
+            } else {
+                jQuery('body').addClass('sim-ccei-expanded').removeClass('sim-ccei-hover');
+                setup.updateCCEIChrome();
+            }
+        });
+        jQuery(document).on('click', '#sim-ccei-tray .ccei-pin-btn', function (ev) {
+            ev.preventDefault();
+            if (jQuery('body').hasClass('sim-ccei-pinned')) {
+                jQuery('body').removeClass('sim-ccei-pinned sim-ccei-expanded sim-ccei-hover');
+            } else {
+                jQuery('body').addClass('sim-ccei-pinned sim-ccei-expanded').removeClass('sim-ccei-hover');
+            }
+            setup.updateCCEIChrome();
+        });
+        jQuery(document).on('click', '#sim-ccei-panel .ccei-collapse-btn', function (ev) {
+            ev.preventDefault();
+            setup.collapseCCEIOverlay();
+        });
+    }
+
+    Macro.add('clearCCEI', {
+        handler : function () {
+            setup.clearCCEI();
+        }
+    });
+
+    Macro.add('loadSimCCEI', {
+        handler : function () {
+            if (!this.args[0]) {
+                return this.error('loadSimCCEI requires a passage name');
+            }
+            var passageName = this.args[0];
+            if (!Story.has(passageName)) {
+                return this.error('passage "' + passageName + '" does not exist');
+            }
+            try {
+                setup.beginSimCCEIConfig();
+                setup.runPassageSilently(passageName);
+                setup.activeCCEI = setup.finalizeSimCCEIConfig();
+                setup.initCCEIState(true);
+                State.variables.ccei.simTitle = setup.activeCCEI.simTitle || '';
+                setup.backupCCEI();
+                setup._cceiForceRebuild = true;
+            } catch (err) {
+                return this.error(err.message || String(err));
+            }
+        }
+    });
+
+    Macro.add('cceiSimTitle', {
+        handler : function () {
+            if (!this.args[0]) {
+                return this.error('cceiSimTitle requires a title string');
+            }
+            if (!setup._simCCEIConfig) {
+                setup.beginSimCCEIConfig();
+            }
+            setup._simCCEIConfig.simTitle = String(this.args[0]);
+        }
+    });
+
+    Macro.add('cceiNote', {
+        handler : function () {
+            if (this.args.length < 2) {
+                return this.error('cceiNote requires item id and text');
+            }
+            var id = Number(this.args[0]);
+            if (id < 1 || id > 25) {
+                return this.error('cceiNote item id must be 1–25');
+            }
+            if (!setup._simCCEIConfig) {
+                setup.beginSimCCEIConfig();
+            }
+            setup._simCCEIConfig.notes[String(id)] = String(this.args[1]);
+        }
+    });
+
+    Macro.add('cceiContext', {
+        handler : function () {
+            if (this.args.length < 2) {
+                return this.error('cceiContext requires category and text (optional subcategory before text)');
+            }
+            if (!setup._simCCEIConfig) {
+                setup.beginSimCCEIConfig();
+            }
+            var key;
+            var text;
+            if (this.args.length >= 3) {
+                key = setup._cceiContextKey(String(this.args[0]).trim(), String(this.args[1]).trim());
+                text = String(this.args[2]);
+            } else {
+                key = setup._cceiContextKey(String(this.args[0]).trim(), '');
+                text = String(this.args[1]);
+            }
+            setup._simCCEIConfig.context[key] = text;
+        }
+    });
+
+    Macro.add('cceiExpandCategory', {
+        handler : function () {
+            if (!this.args[0]) {
+                return this.error('cceiExpandCategory requires a category id');
+            }
+            if (!setup._simCCEIConfig) {
+                setup.beginSimCCEIConfig();
+            }
+            var id = String(this.args[0]).trim();
+            if (setup._simCCEIConfig.expandCategories.indexOf(id) === -1) {
+                setup._simCCEIConfig.expandCategories.push(id);
+            }
+        }
+    });
+
+    Macro.add('cceiExpandSubcategory', {
+        handler : function () {
+            if (this.args.length < 2) {
+                return this.error('cceiExpandSubcategory requires category and subcategory ids');
+            }
+            if (!setup._simCCEIConfig) {
+                setup.beginSimCCEIConfig();
+            }
+            var catId = String(this.args[0]).trim();
+            var subId = String(this.args[1]).trim();
+            if (!setup._simCCEIConfig.expandSubcategories[catId]) {
+                setup._simCCEIConfig.expandSubcategories[catId] = [];
+            }
+            if (setup._simCCEIConfig.expandSubcategories[catId].indexOf(subId) === -1) {
+                setup._simCCEIConfig.expandSubcategories[catId].push(subId);
+            }
+        }
+    });
+
+    Macro.add('cceiShrinkItem', {
+        handler : function () {
+            if (!this.args[0]) {
+                return this.error('cceiShrinkItem requires item id');
+            }
+            if (!setup._simCCEIConfig) {
+                setup.beginSimCCEIConfig();
+            }
+            var id = Number(this.args[0]);
+            if (id < 1 || id > 25) {
+                return this.error('cceiShrinkItem item id must be 1–25');
+            }
+            if (setup._simCCEIConfig.shrinkItems.indexOf(id) === -1) {
+                setup._simCCEIConfig.shrinkItems.push(id);
+            }
+        }
+    });
+
+    (function loadCCEIHtml2pdf() {
+        if (document.getElementById('ccei-html2pdf-script')) {
+            return;
+        }
+        var s = document.createElement('script');
+        s.id = 'ccei-html2pdf-script';
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        s.crossOrigin = 'anonymous';
+        document.head.appendChild(s);
+    }());
 
 }());
 
@@ -658,4 +1635,258 @@ body.sim-footer-active #story {
 	width: 11em;
 	background: #1a3a5c;
 	color: #fff;
+}
+
+/* CCEI 2.0 — sidebar tray + full-passage overlay (sim passages only). */
+body.sim-ccei-active #ui-bar-body {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+body.sim-ccei-active #menu-core {
+	flex-shrink: 0;
+}
+#sim-ccei-tray.sim-ccei-tray {
+	flex-shrink: 0;
+	border-top: 1px solid #444;
+	padding: 0.5em 0.35em;
+	margin-top: 0.35em;
+	text-align: center;
+}
+#sim-ccei-tray .ccei-tray-title {
+	margin: 0 0 0.25em;
+	font-size: 1em;
+	color: #eee;
+}
+#sim-ccei-tray .ccei-tray-totals {
+	margin: 0 0 0.4em;
+	font-size: 0.85em;
+	color: #ccc;
+}
+#sim-ccei-tray .ccei-tray-buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35em;
+}
+#sim-ccei-tray .ccei-tray-buttons button {
+	width: 100%;
+	padding: 0.35em 0.5em;
+	font-size: 0.9em;
+	cursor: pointer;
+}
+#sim-ccei-tray .ccei-tray-buttons button.is-active {
+	background-color: #57c;
+	color: #fff;
+}
+#sim-ccei-panel.sim-ccei-panel {
+	display: none;
+	position: fixed;
+	z-index: 900;
+	left: 17.5em;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	overflow-y: auto;
+	overflow-x: hidden;
+	box-sizing: border-box;
+	background: rgba(34, 34, 34, 0.97);
+	color: #eee;
+	text-align: left;
+	font-size: 0.9em;
+	line-height: 1.35;
+	padding: 0.5em 0.75em 1em;
+	border-left: 2px solid #444;
+	box-shadow: -4px 0 12px rgba(0, 0, 0, 0.35);
+}
+body.sim-ccei-hover #sim-ccei-panel,
+body.sim-ccei-expanded #sim-ccei-panel,
+body.sim-ccei-pinned #sim-ccei-panel {
+	display: block;
+}
+#sim-ccei-panel .ccei-panel-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5em;
+	margin-bottom: 0.5em;
+	padding-bottom: 0.35em;
+	border-bottom: 1px solid #444;
+}
+#sim-ccei-panel .ccei-collapse-btn {
+	padding: 0.35em 0.6em;
+	cursor: pointer;
+}
+#sim-ccei-panel .ccei-title {
+	flex: 1 1 auto;
+	font-size: 1.2em;
+	margin: 0;
+	color: #eee;
+	text-align: center;
+}
+#sim-ccei-panel .ccei-pinned-badge {
+	display: none;
+	font-size: 0.85em;
+	color: #9cf;
+	font-weight: bold;
+}
+body.sim-ccei-pinned #sim-ccei-panel .ccei-pinned-badge {
+	display: inline;
+}
+#sim-ccei-panel .ccei-meta {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	margin-bottom: 0.75em;
+	padding: 0.5em;
+	background: #1a3a5c;
+	border-radius: 4px;
+}
+#sim-ccei-panel .ccei-meta-sim-row {
+	text-align: center;
+	padding: 0.25em 0;
+}
+#sim-ccei-panel .ccei-meta-sim-row .ccei-sim-title {
+	font-size: 1.15em;
+	font-weight: bold;
+	color: #fff;
+}
+#sim-ccei-panel .ccei-meta-fields-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	gap: 0.5em 1em;
+}
+@media (max-width: 36em) {
+	#sim-ccei-panel .ccei-meta-fields-row {
+		grid-template-columns: 1fr;
+	}
+}
+#sim-ccei-panel .ccei-meta-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2em;
+	font-size: 0.9em;
+	color: #dde;
+}
+#sim-ccei-panel .ccei-meta-field input[type="text"],
+#sim-ccei-panel .ccei-meta-field input[type="date"] {
+	width: 100%;
+	box-sizing: border-box;
+	font-size: 1em;
+}
+#sim-ccei-panel .ccei-meta .ccei-scoring-key {
+	font-size: 0.9em;
+	margin: 0;
+	color: #ccc;
+	text-align: center;
+}
+#sim-ccei-panel .ccei-split-layout {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1em;
+	align-items: start;
+}
+@media (max-width: 48em) {
+	#sim-ccei-panel .ccei-split-layout {
+		grid-template-columns: 1fr;
+	}
+}
+#sim-ccei-panel .ccei-col-scores {
+	min-width: 0;
+}
+#sim-ccei-panel .ccei-col-comments {
+	min-width: 0;
+	position: sticky;
+	top: 0;
+	max-height: 100%;
+	overflow-y: auto;
+}
+#sim-ccei-panel .ccei-comment-block {
+	margin-bottom: 0.5em;
+}
+#sim-ccei-panel .ccei-export-row {
+	text-align: center;
+	margin: 0.5em 0;
+}
+#sim-ccei-panel .ccei-export-pdf-btn {
+	padding: 0.4em 1.2em;
+	font-size: 1em;
+	cursor: pointer;
+}
+#sim-ccei-panel .ccei-category,
+#sim-ccei-panel .ccei-subcategory {
+	margin-bottom: 0.35em;
+}
+#sim-ccei-panel .ccei-category-title,
+#sim-ccei-panel .ccei-subcategory-title {
+	font-weight: bold;
+	color: #dde;
+	cursor: pointer;
+}
+#sim-ccei-panel .ccei-category-title {
+	background: #1a3a5c;
+	color: #fff;
+	padding: 0.25em 0.35em;
+}
+#sim-ccei-panel .ccei-subcategory-title {
+	background: #333;
+	padding: 0.2em 0.3em;
+	font-size: 0.95em;
+}
+#sim-ccei-panel .ccei-context-block {
+	background: #2a2a2a;
+	border-left: 3px solid #68d;
+	padding: 0.35em 0.4em;
+	margin: 0.35em 0;
+	font-style: italic;
+	color: #ddd;
+}
+#sim-ccei-panel .ccei-item-row {
+	border-bottom: 1px solid #444;
+	padding: 0.35em 0;
+}
+#sim-ccei-panel .ccei-item-label {
+	margin-bottom: 0.25em;
+	color: #eee;
+}
+#sim-ccei-panel .ccei-item-note {
+	font-style: italic;
+	color: #9cf;
+	margin-top: 0.2em;
+	font-size: 0.95em;
+}
+#sim-ccei-panel .ccei-item-scores {
+	display: flex;
+	gap: 0.35em;
+	flex-wrap: wrap;
+}
+#sim-ccei-panel .ccei-score-label {
+	white-space: nowrap;
+	color: #ccc;
+}
+#sim-ccei-panel .ccei-comment-label {
+	display: block;
+	font-weight: bold;
+	margin: 0.35em 0 0.15em;
+	color: #ccc;
+}
+#sim-ccei-panel .ccei-subcomment,
+#sim-ccei-panel .ccei-overall-comment {
+	width: 100%;
+	box-sizing: border-box;
+	font-size: 1em;
+	resize: vertical;
+}
+#sim-ccei-panel .ccei-totals {
+	background: #1a3a5c;
+	color: #fff;
+	padding: 0.4em;
+	margin: 0.5em 0;
+	border-radius: 4px;
+	font-weight: bold;
+}
+#sim-ccei-panel .ccei-copyright {
+	font-size: 0.85em;
+	color: #888;
+	text-align: center;
+	margin-top: 0.5em;
 }

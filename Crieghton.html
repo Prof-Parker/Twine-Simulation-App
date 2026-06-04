@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Creighton Competency Evaluation Instrument (CCEI) 2.0</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f9f9f9;
+        color: #333;
+    }
+    .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1, h2, h3 {
+        text-align: center;
+        color: #002b5c;
+    }
+    .header-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .header-info div {
+        margin-bottom: 10px;
+    }
+    .header-info label {
+        font-weight: bold;
+    }
+    .header-info input {
+        padding: 5px;
+        margin-left: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    .scoring-key {
+        background: #eef;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+        font-size: 0.9em;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+    }
+    th {
+        background-color: #002b5c;
+        color: white;
+        text-align: center;
+    }
+    .category-header {
+        background-color: #d9e2ec;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .subtotal-row {
+        background-color: #f1f1f1;
+        font-weight: bold;
+        text-align: right;
+    }
+    .center {
+        text-align: center;
+    }
+    .comments-section textarea {
+        width: 100%;
+        height: 60px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+    .totals-container {
+        background: #e8f4f8;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-size: 1.2em;
+        display: flex;
+        justify-content: space-around;
+        font-weight: bold;
+    }
+    .overall-comments {
+        margin-top: 20px;
+    }
+    .overall-comments textarea {
+        width: 100%;
+        height: 100px;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Creighton College of Nursing</h1>
+    <h2>Creighton Competency Evaluation Instrument (CCEI) 2.0</h2>
+
+    <div class="header-info">
+        <div><label>Student Name:</label> <input type="text" id="studentName"></div>
+        <div><label>Evaluator Name:</label> <input type="text" id="evaluatorName"></div>
+        <div><label>Date (MM/DD/YYYY):</label> <input type="date" id="evalDate"></div>
+    </div>
+
+    <div class="scoring-key">
+        <strong>Scoring Key:</strong><br>
+        <strong>0</strong> = Below acceptable threshold of competency<br>
+        <strong>1</strong> = Meets minimum acceptable threshold of competency<br>
+        <strong>NA</strong> = Not applicable (Circle Appropriate Score for all Applicable Criteria - If not applicable, circle NA)
+    </div>
+
+    <form id="evaluationForm">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50%;">CRITERIA</th>
+                    <th style="width: 10%;">0</th>
+                    <th style="width: 10%;">1</th>
+                    <th style="width: 10%;">NA</th>
+                    <th style="width: 20%;">COMMENTS</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr><td colspan="5" class="category-header">CLINICAL JUDGMENT</td></tr>
+                
+                <tr><td colspan="5" style="font-weight: bold; background:#fafafa;">RECOGNIZE CUES</td></tr>
+                <script>
+                    const recognizeCues = [
+                        "1. Obtains Pertinent Subjective Data.",
+                        "2. Obtains Pertinent Objective Data.",
+                        "3. Assesses the Environment.",
+                        "4. Assesses Factors Affecting Health.",
+                        "5. Recognizes Variances/Pertinent Data."
+                    ];
+                    recognizeCues.forEach((item, index) => {
+                        let i = index + 1;
+                        document.write(`
+                            <tr>
+                                <td>${item}</td>
+                                <td class="center"><input type="radio" name="item${i}" value="0" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="1" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="NA" class="score-calc" data-cat="clin-judg"></td>
+                                ${i === 1 ? '<td rowspan="5" class="comments-section"><textarea placeholder="Comments for Recognize Cues..."></textarea></td>' : ''}
+                            </tr>
+                        `);
+                    });
+                </script>
+
+                <tr><td colspan="5" style="font-weight: bold; background:#fafafa;">ANALYZE CUES</td></tr>
+                <script>
+                    const analyzeCues = [
+                        "6. Interprets Subjective Data.",
+                        "7. Interprets Objective Data.",
+                        "8. Identifies Cause(s) of Problem."
+                    ];
+                    analyzeCues.forEach((item, index) => {
+                        let i = index + 6;
+                        document.write(`
+                            <tr>
+                                <td>${item}</td>
+                                <td class="center"><input type="radio" name="item${i}" value="0" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="1" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="NA" class="score-calc" data-cat="clin-judg"></td>
+                                ${i === 6 ? '<td rowspan="3" class="comments-section"><textarea placeholder="Comments for Analyze Cues..."></textarea></td>' : ''}
+                            </tr>
+                        `);
+                    });
+                </script>
+
+                <tr><td colspan="5" style="font-weight: bold; background:#fafafa;">PRIORITIZE HYPOTHESES</td></tr>
+                <script>
+                    const prioritizeHypo = [
+                        "9. Identifies Expected Outcomes.",
+                        "10. Prioritizes Interventions."
+                    ];
+                    prioritizeHypo.forEach((item, index) => {
+                        let i = index + 9;
+                        document.write(`
+                            <tr>
+                                <td>${item}</td>
+                                <td class="center"><input type="radio" name="item${i}" value="0" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="1" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="NA" class="score-calc" data-cat="clin-judg"></td>
+                                ${i === 9 ? '<td rowspan="2" class="comments-section"><textarea placeholder="Comments..."></textarea></td>' : ''}
+                            </tr>
+                        `);
+                    });
+                </script>
+
+                <tr><td colspan="5" style="font-weight: bold; background:#fafafa;">GENERATE SOLUTIONS</td></tr>
+                <script>
+                    const genSolutions = [
+                        "11. Generates Plan.",
+                        "12. Reassesses Pertinent Data."
+                    ];
+                    genSolutions.forEach((item, index) => {
+                        let i = index + 11;
+                        document.write(`
+                            <tr>
+                                <td>${item}</td>
+                                <td class="center"><input type="radio" name="item${i}" value="0" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="1" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="NA" class="score-calc" data-cat="clin-judg"></td>
+                                ${i === 11 ? '<td rowspan="2" class="comments-section"><textarea placeholder="Comments..."></textarea></td>' : ''}
+                            </tr>
+                        `);
+                    });
+                </script>
+
+                <tr><td colspan="5" style="font-weight: bold; background:#fafafa;">TAKE ACTIONS</td></tr>
+                <script>
+                    const takeActions = [
+                        "13. Manages Equipment and/or Devices Involved in Care.",
+                        "14. Implements Evidence-Based Interventions."
+                    ];
+                    takeActions.forEach((item, index) => {
+                        let i = index + 13;
+                        document.write(`
+                            <tr>
+                                <td>${item}</td>
+                                <td class="center"><input type="radio" name="item${i}" value="0" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="1" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="NA" class="score-calc" data-cat="clin-judg"></td>
+                                ${i === 13 ? '<td rowspan="2" class="comments-section"><textarea placeholder="Comments..."></textarea></td>' : ''}
+                            </tr>
+                        `);
+                    });
+                </script>
+
+                <tr><td colspan="5" style="font-weight: bold; background:#fafafa;">EVALUATE OUTCOMES</td></tr>
+                <script>
+                    const evalOutcomes = [
+                        "15. Evaluates Interventions in relation to Expected Outcomes.",
+                        "16. Modifies Expected Outcomes, Assessments, and/or Interventions.",
+                        "17. Demonstrates Reflective Practice."
+                    ];
+                    evalOutcomes.forEach((item, index) => {
+                        let i = index + 15;
+                        document.write(`
+                            <tr>
+                                <td>${item}</td>
+                                <td class="center"><input type="radio" name="item${i}" value="0" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="1" class="score-calc" data-cat="clin-judg"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="NA" class="score-calc" data-cat="clin-judg"></td>
+                                ${i === 15 ? '<td rowspan="3" class="comments-section"><textarea placeholder="Comments..."></textarea></td>' : ''}
+                            </tr>
+                        `);
+                    });
+                </script>
+
+
+                <tr><td colspan="5" class="category-header">COMMUNICATION</td></tr>
+                <script>
+                    const communication = [
+                        "18. Communicates Professionally.",
+                        "19. Communicates Therapeutically.",
+                        "20. Documents Clearly, Concisely, Accurately, Efficiently."
+                    ];
+                    communication.forEach((item, index) => {
+                        let i = index + 18;
+                        document.write(`
+                            <tr>
+                                <td>${item}</td>
+                                <td class="center"><input type="radio" name="item${i}" value="0" class="score-calc" data-cat="comm"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="1" class="score-calc" data-cat="comm"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="NA" class="score-calc" data-cat="comm"></td>
+                                ${i === 18 ? '<td rowspan="3" class="comments-section"><textarea placeholder="Communication Comments..."></textarea></td>' : ''}
+                            </tr>
+                        `);
+                    });
+                </script>
+
+                <tr><td colspan="5" class="category-header">QUALITY & SAFETY</td></tr>
+                <script>
+                    const qualitySafety = [
+                        "21. Integrates Informatics to Support Decision-Making.",
+                        "22. Adheres to Principles of Patient Safety.",
+                        "23. Advocates for Client."
+                    ];
+                    qualitySafety.forEach((item, index) => {
+                        let i = index + 21;
+                        document.write(`
+                            <tr>
+                                <td>${item}</td>
+                                <td class="center"><input type="radio" name="item${i}" value="0" class="score-calc" data-cat="qs"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="1" class="score-calc" data-cat="qs"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="NA" class="score-calc" data-cat="qs"></td>
+                                ${i === 21 ? '<td rowspan="3" class="comments-section"><textarea placeholder="Quality & Safety Comments..."></textarea></td>' : ''}
+                            </tr>
+                        `);
+                    });
+                </script>
+
+                <tr><td colspan="5" class="category-header">PROFESSIONALISM</td></tr>
+                <script>
+                    const professionalism = [
+                        "24. Adheres to Legal and Ethical Standards of Care.",
+                        "25. Demonstrates Professional Behavior."
+                    ];
+                    professionalism.forEach((item, index) => {
+                        let i = index + 24;
+                        document.write(`
+                            <tr>
+                                <td>${item}</td>
+                                <td class="center"><input type="radio" name="item${i}" value="0" class="score-calc" data-cat="prof"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="1" class="score-calc" data-cat="prof"></td>
+                                <td class="center"><input type="radio" name="item${i}" value="NA" class="score-calc" data-cat="prof"></td>
+                                ${i === 24 ? '<td rowspan="2" class="comments-section"><textarea placeholder="Professionalism Comments..."></textarea></td>' : ''}
+                            </tr>
+                        `);
+                    });
+                </script>
+
+            </tbody>
+        </table>
+
+        <div class="overall-comments">
+            <label><strong>OVERALL COMMENTS:</strong></label>
+            <textarea placeholder="Enter overall evaluation comments here..."></textarea>
+        </div>
+
+        <div class="totals-container">
+            <div>Total Possible Points: <span id="totalPossible">0</span></div>
+            <div>Total Earned Points: <span id="totalEarned">0</span></div>
+            <div>Percent Earned: <span id="percentEarned">0</span>%</div>
+        </div>
+        
+        <p style="text-align:center; font-size: 0.8em; color: #666; margin-top:20px;">
+            Copyright Creighton University. All rights reserved.
+        </p>
+    </form>
+</div>
+
+<script>
+    // Add event listeners to all radio buttons
+    const radios = document.querySelectorAll('.score-calc');
+    radios.forEach(radio => {
+        radio.addEventListener('change', calculateTotals);
+    });
+
+    function calculateTotals() {
+        let earned = 0;
+        let possible = 0;
+        
+        // Loop through item1 to item25
+        for(let i = 1; i <= 25; i++) {
+            const selected = document.querySelector(`input[name="item${i}"]:checked`);
+            
+            if (selected) {
+                const val = selected.value;
+                if (val === "1") {
+                    earned += 1;
+                    possible += 1; // It's possible because it's not NA
+                } else if (val === "0") {
+                    possible += 1; // It's possible because it's not NA
+                }
+                // If "NA", it does not add to possible or earned points
+            }
+        }
+
+        // Calculate Percentage
+        let percentage = 0;
+        if (possible > 0) {
+            percentage = ((earned / possible) * 100).toFixed(2);
+        }
+
+        // Update the DOM
+        document.getElementById('totalEarned').innerText = earned;
+        document.getElementById('totalPossible').innerText = possible;
+        document.getElementById('percentEarned').innerText = percentage;
+    }
+</script>
+
+</body>
+</html>
