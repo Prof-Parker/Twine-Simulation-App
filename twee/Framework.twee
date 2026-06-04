@@ -1,6 +1,9 @@
 :: StoryTitle
 Nursing Simulation Framework
-
+:: StoryCaption
+<div class="ui-bar-logo-wrap">\
+<img class="ui-bar-logo" src="images/shastacollege-logo.png" alt="Shasta College">\
+</div>\
 
 :: StoryData
 {
@@ -1495,6 +1498,100 @@ Nursing Simulation Framework
 #menu-item-restart {
     display: none;
 }
+/* Shasta College green — left UI sidebar only */
+#ui-bar,
+#ui-bar-body,
+#ui-bar-history,
+#ui-bar-toggle {
+	background-color: #315435;
+}
+#ui-bar-history a,
+#ui-bar-toggle {
+	color: #f5f5f5;
+}
+#ui-bar a:hover,
+#ui-bar-history a:hover {
+	color: #fff;
+}
+#ui-bar-toggle {
+	border-color: #4a6b4e;
+}
+#ui-bar-toggle:hover {
+	background-color: #444;
+	border-color: #eee;
+}
+/* Override SugarCube #ui-bar-body > :not(:first-child) { margin-top: 2em } */
+#ui-bar-body > :not(:first-child) {
+	margin-top: 0;
+}
+#ui-bar-body > #story-author {
+	display: none;
+	margin: 0;
+}
+#story-title {
+	margin: 0 0 25px;
+	padding: 0;
+	line-height: 1.2;
+	color: #fff;
+}
+#story-caption {
+	margin: 0 0 25px;
+	padding: 0;
+}
+.ui-bar-logo-wrap {
+	text-align: center;
+	margin: 0;
+	padding: 0;
+	line-height: 0;
+}
+.ui-bar-logo {
+	display: block;
+	max-width: 7.5em;
+	width: 72%;
+	height: auto;
+	margin: 0 auto;
+}
+#menu {
+	margin: 0;
+	padding: 0;
+}
+#menu ul {
+	margin-top: 0;
+}
+#menu li a,
+#menu-core a,
+#sim-ccei-tray .ccei-tray-buttons button {
+	display: block;
+	box-sizing: border-box;
+	background-color: #444;
+	color: #fff;
+	border: 1px solid #555;
+	text-decoration: none;
+	text-transform: none;
+	-o-transition: background-color 0.15s ease-in, border-color 0.15s ease-in, color 0.15s ease-in;
+	transition: background-color 0.15s ease-in, border-color 0.15s ease-in, color 0.15s ease-in;
+}
+#menu li a:hover,
+#menu-core a:hover,
+#sim-ccei-tray .ccei-tray-buttons button:hover {
+	background-color: #555;
+	border-color: #777;
+	color: #fff;
+	text-decoration: none;
+}
+#menu li a:active,
+#menu-core a:active,
+#sim-ccei-tray .ccei-tray-buttons button:active {
+	background-color: #333;
+	border-color: #444;
+	color: #fff;
+}
+#menu li a:focus-visible,
+#menu-core a:focus-visible,
+#sim-ccei-tray .ccei-tray-buttons button:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
+}
 .sim-header {
 	display: flex;
 	flex-wrap: wrap;
@@ -1642,6 +1739,8 @@ body.sim-ccei-active #ui-bar-body {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
+	justify-content: flex-start;
+	gap: 0;
 }
 body.sim-ccei-active #menu-core {
 	flex-shrink: 0;
@@ -1675,8 +1774,13 @@ body.sim-ccei-active #menu-core {
 	cursor: pointer;
 }
 #sim-ccei-tray .ccei-tray-buttons button.is-active {
-	background-color: #57c;
+	background-color: #5c5c5c;
+	border-color: #888;
 	color: #fff;
+}
+#sim-ccei-tray .ccei-tray-buttons button.is-active:hover {
+	background-color: #666;
+	border-color: #999;
 }
 #sim-ccei-panel.sim-ccei-panel {
 	display: none;

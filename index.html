@@ -100,9 +100,104 @@ var saveAs=saveAs||navigator.msSaveBlob&&navigator.msSaveBlob.bind(navigator)||f
 		<div id="init-lacking">Your browser lacks required capabilities. Please upgrade it or switch to another to continue.</div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://802BBAB3-7864-4AC1-B8B8-5FD4F192C24A// --><tw-storydata name="Nursing Simulation Framework" startnode="6" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="802BBAB3-7864-4AC1-B8B8-5FD4F192C24A" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">#menu-item-saves, 
+	<!-- UUID://802BBAB3-7864-4AC1-B8B8-5FD4F192C24A// --><tw-storydata name="Nursing Simulation Framework" startnode="7" creator="Tweego" creator-version="2.1.1+81d1d71" ifid="802BBAB3-7864-4AC1-B8B8-5FD4F192C24A" zoom="1" format="SugarCube" format-version="2.30.0" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">#menu-item-saves, 
 #menu-item-restart {
     display: none;
+}
+/* Shasta College green — left UI sidebar only */
+#ui-bar,
+#ui-bar-body,
+#ui-bar-history,
+#ui-bar-toggle {
+	background-color: #315435;
+}
+#ui-bar-history a,
+#ui-bar-toggle {
+	color: #f5f5f5;
+}
+#ui-bar a:hover,
+#ui-bar-history a:hover {
+	color: #fff;
+}
+#ui-bar-toggle {
+	border-color: #4a6b4e;
+}
+#ui-bar-toggle:hover {
+	background-color: #444;
+	border-color: #eee;
+}
+/* Override SugarCube #ui-bar-body > :not(:first-child) { margin-top: 2em } */
+#ui-bar-body > :not(:first-child) {
+	margin-top: 0;
+}
+#ui-bar-body > #story-author {
+	display: none;
+	margin: 0;
+}
+#story-title {
+	margin: 0 0 25px;
+	padding: 0;
+	line-height: 1.2;
+	color: #fff;
+}
+#story-caption {
+	margin: 0 0 25px;
+	padding: 0;
+}
+.ui-bar-logo-wrap {
+	text-align: center;
+	margin: 0;
+	padding: 0;
+	line-height: 0;
+}
+.ui-bar-logo {
+	display: block;
+	max-width: 7.5em;
+	width: 72%;
+	height: auto;
+	margin: 0 auto;
+}
+#menu {
+	margin: 0;
+	padding: 0;
+}
+#menu ul {
+	margin-top: 0;
+}
+#menu li a,
+#menu-core a,
+#sim-ccei-tray .ccei-tray-buttons button {
+	display: block;
+	box-sizing: border-box;
+	background-color: #444;
+	color: #fff;
+	border: 1px solid #555;
+	text-decoration: none;
+	text-transform: none;
+	-o-transition: background-color 0.15s ease-in, border-color 0.15s ease-in, color 0.15s ease-in;
+	transition: background-color 0.15s ease-in, border-color 0.15s ease-in, color 0.15s ease-in;
+}
+#menu li a:hover,
+#menu-core a:hover,
+#sim-ccei-tray .ccei-tray-buttons button:hover {
+	background-color: #555;
+	border-color: #777;
+	color: #fff;
+	text-decoration: none;
+}
+#menu li a:active,
+#menu-core a:active,
+#sim-ccei-tray .ccei-tray-buttons button:active {
+	background-color: #333;
+	border-color: #444;
+	color: #fff;
+}
+#menu li a:focus-visible,
+#menu li a:focus-visible,
+#menu-core a:focus-visible,
+#sim-ccei-tray .ccei-tray-buttons button:focus-visible {
+	outline: 2px solid #fff;
+	outline-offset: 2px;
 }
 .sim-header {
 	display: flex;
@@ -251,6 +346,8 @@ body.sim-ccei-active #ui-bar-body {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
+	justify-content: flex-start;
+	gap: 0;
 }
 body.sim-ccei-active #menu-core {
 	flex-shrink: 0;
@@ -284,8 +381,13 @@ body.sim-ccei-active #menu-core {
 	cursor: pointer;
 }
 #sim-ccei-tray .ccei-tray-buttons button.is-active {
-	background-color: #57c;
+	background-color: #5c5c5c;
+	border-color: #888;
 	color: #fff;
+}
+#sim-ccei-tray .ccei-tray-buttons button.is-active:hover {
+	background-color: #666;
+	border-color: #999;
 }
 #sim-ccei-panel.sim-ccei-panel {
 	display: none;
@@ -1856,7 +1958,9 @@ body.sim-ccei-pinned #sim-ccei-panel .ccei-pinned-badge {
         document.head.appendChild(s);
     }());
 
-}());</script><tw-tag name="setup" color="blue"></tw-tag><tw-tag name="sim" color="green"></tw-tag><tw-passagedata pid="1" name="Assessment_Table" tags="nobr" position="150,25" size="100,100">&lt;table class=&quot;assessment-table&quot;&gt;
+}());</script><tw-tag name="setup" color="blue"></tw-tag><tw-tag name="sim" color="green"></tw-tag><tw-passagedata pid="1" name="StoryCaption" tags="" position="100,100" size="100,100">&lt;div class=&quot;ui-bar-logo-wrap&quot;&gt;\
+&lt;img class=&quot;ui-bar-logo&quot; src=&quot;images/shastacollege-logo.png&quot; alt=&quot;Shasta College&quot;&gt;\
+&lt;/div&gt;\</tw-passagedata><tw-passagedata pid="2" name="Assessment_Table" tags="nobr" position="150,25" size="100,100">&lt;table class=&quot;assessment-table&quot;&gt;
 	&lt;caption&gt;Assessment&lt;/caption&gt;
 	&lt;tr&gt;&lt;th scope=&quot;row&quot;&gt;Neuro&lt;/th&gt;&lt;td&gt;&lt;&lt;= $neuro&gt;&gt;&lt;/td&gt;&lt;/tr&gt;
 	&lt;tr&gt;&lt;th scope=&quot;row&quot;&gt;Cardiac&lt;/th&gt;&lt;td&gt;&lt;&lt;= $cardiac&gt;&gt;&lt;/td&gt;&lt;/tr&gt;
@@ -1869,7 +1973,7 @@ body.sim-ccei-pinned #sim-ccei-panel .ccei-pinned-badge {
 	&lt;tr&gt;&lt;th scope=&quot;row&quot;&gt;Psych&lt;/th&gt;&lt;td&gt;&lt;&lt;= $psych&gt;&gt;&lt;/td&gt;&lt;/tr&gt;
 	&lt;tr&gt;&lt;th scope=&quot;row&quot;&gt;Vascular Access&lt;/th&gt;&lt;td&gt;&lt;&lt;= $vascularAccess&gt;&gt;&lt;/td&gt;&lt;/tr&gt;
 	&lt;tr&gt;&lt;th scope=&quot;row&quot;&gt;Misc&lt;/th&gt;&lt;td&gt;&lt;&lt;= $misc&gt;&gt;&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;</tw-passagedata><tw-passagedata pid="2" name="PassageFooter" tags="" position="400,25" size="100,100">&lt;&lt;nobr&gt;&gt;
+&lt;/table&gt;</tw-passagedata><tw-passagedata pid="3" name="PassageFooter" tags="" position="400,25" size="100,100">&lt;&lt;nobr&gt;&gt;
 &lt;&lt;if tags().includes(&quot;setup&quot;)&gt;&gt;
 &lt;&lt;elseif tags().includes(&quot;sim&quot;)&gt;&gt;
 &lt;div id=&quot;sim-footer&quot; class=&quot;sim-footer-pinned&quot;&gt;
@@ -1899,7 +2003,7 @@ body.sim-ccei-pinned #sim-ccei-panel .ccei-pinned-badge {
 	&lt;/div&gt;
 &lt;/div&gt;
 &lt;&lt;/if&gt;&gt;
-&lt;&lt;/nobr&gt;&gt;</tw-passagedata><tw-passagedata pid="3" name="PassageHeader" tags="" position="275,25" size="100,100">&lt;&lt;nobr&gt;&gt;
+&lt;&lt;/nobr&gt;&gt;</tw-passagedata><tw-passagedata pid="4" name="PassageHeader" tags="" position="275,25" size="100,100">&lt;&lt;nobr&gt;&gt;
 &lt;&lt;if tags().includes(&quot;setup&quot;)&gt;&gt;
 &lt;&lt;elseif tags().includes(&quot;sim&quot;)&gt;&gt;
 &lt;div class=&quot;sim-header&quot;&gt;
@@ -1910,7 +2014,7 @@ body.sim-ccei-pinned #sim-ccei-panel .ccei-pinned-badge {
 &lt;/div&gt;
 &lt;hr&gt;
 &lt;&lt;/if&gt;&gt;
-&lt;&lt;/nobr&gt;&gt;</tw-passagedata><tw-passagedata pid="4" name="StoryMenu" tags="" position="525,25" size="100,100">&lt;&lt;if $currentSimStart&gt;&gt;
+&lt;&lt;/nobr&gt;&gt;</tw-passagedata><tw-passagedata pid="5" name="StoryMenu" tags="" position="525,25" size="100,100">&lt;&lt;if $currentSimStart&gt;&gt;
 	&lt;&lt;button &quot;Repeat Sim&quot;&gt;&gt;
 		&lt;&lt;repeatSim&gt;&gt;
 	&lt;&lt;/button&gt;&gt;
@@ -1922,7 +2026,7 @@ body.sim-ccei-pinned #sim-ccei-panel .ccei-pinned-badge {
 	&lt;&lt;set $patientName to &quot;&quot;, $patientDOB to &quot;&quot;, $patientAllergies to &quot;&quot;&gt;&gt;
 	&lt;&lt;clearAssessment&gt;&gt;
 	&lt;&lt;clearCCEI&gt;&gt;
-&lt;&lt;/link&gt;&gt;</tw-passagedata><tw-passagedata pid="5" name="StoryInit" tags="" position="25,25" size="100,100">&lt;&lt;set $patientName to &quot;&quot;&gt;&gt;
+&lt;&lt;/link&gt;&gt;</tw-passagedata><tw-passagedata pid="6" name="StoryInit" tags="" position="25,25" size="100,100">&lt;&lt;set $patientName to &quot;&quot;&gt;&gt;
 &lt;&lt;set $patientDOB to &quot;&quot;&gt;&gt;
 &lt;&lt;set $patientAllergies to &quot;&quot;&gt;&gt;
 &lt;&lt;set $currentSimStart to &quot;&quot;&gt;&gt;
@@ -1953,7 +2057,7 @@ body.sim-ccei-pinned #sim-ccei-panel .ccei-pinned-badge {
 	&lt;&lt;track &quot;hold_music&quot;&gt;&gt;
 	&lt;&lt;track &quot;pa_announcement&quot;&gt;&gt;
 	&lt;&lt;track &quot;bodily_function&quot;&gt;&gt;
-&lt;&lt;/createaudiogroup&gt;&gt;</tw-passagedata><tw-passagedata pid="6" name="Start" tags="setup" position="725,100" size="100,100">&lt;center&gt;&lt;h1&gt;Shasta College Simulation Program Facilitation Storyboard&lt;/h1&gt;&lt;/center&gt;\
+&lt;&lt;/createaudiogroup&gt;&gt;</tw-passagedata><tw-passagedata pid="7" name="Start" tags="setup" position="850,100" size="100,100">&lt;center&gt;&lt;h1&gt;Shasta College Simulation Program Facilitation Storyboard&lt;/h1&gt;&lt;/center&gt;\
 &lt;hr&gt;\
 &lt;center&gt;\
 	Developed and maintained by Robin Parker
@@ -1964,45 +2068,45 @@ body.sim-ccei-pinned #sim-ccei-panel .ccei-pinned-badge {
 	* [[REGN 25P]]
 	* [[REGN 35P]]
 	* [[REGN 36P]]
-	* [[REGN 48P]]</tw-passagedata><tw-passagedata pid="7" name="REGN 15P" tags="setup" position="850,100" size="100,100">&lt;h2&gt;REGN 15P Simulations&lt;/h2&gt;\
+	* [[REGN 48P]]</tw-passagedata><tw-passagedata pid="8" name="REGN 15P" tags="setup" position="975,100" size="100,100">&lt;h2&gt;REGN 15P Simulations&lt;/h2&gt;\
 &lt;hr&gt;\
 
 &lt;&lt;button &quot;Jane Doe (Demo Patient)&quot;&gt;&gt;
 	&lt;&lt;launchSim &quot;ExampleSim_Start&quot; &quot;Jane Doe&quot; &quot;03/15/1988&quot; &quot;Penicillin&quot; &quot;REGN 15P&quot;&gt;&gt;
 &lt;&lt;/button&gt;&gt;
 
-[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="8" name="REGN 25P" tags="setup" position="975,100" size="100,100">&lt;h2&gt;REGN 25P Simulations&lt;/h2&gt;\
+[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="9" name="REGN 25P" tags="setup" position="1100,100" size="100,100">&lt;h2&gt;REGN 25P Simulations&lt;/h2&gt;\
 &lt;hr&gt;\
 
 &lt;&lt;button &quot;Jane Doe (Demo Patient)&quot;&gt;&gt;
 	&lt;&lt;launchSim &quot;ExampleSim_Start&quot; &quot;Jane Doe&quot; &quot;03/15/1988&quot; &quot;Penicillin&quot; &quot;REGN 25P&quot;&gt;&gt;
 &lt;&lt;/button&gt;&gt;
 
-[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="9" name="REGN 35P" tags="setup" position="1100,100" size="100,100">&lt;h2&gt;REGN 35P Simulations&lt;/h2&gt;\
+[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="10" name="REGN 35P" tags="setup" position="1225,100" size="100,100">&lt;h2&gt;REGN 35P Simulations&lt;/h2&gt;\
 &lt;hr&gt;\
 
 &lt;&lt;button &quot;Jane Doe (Demo Patient)&quot;&gt;&gt;
 	&lt;&lt;launchSim &quot;ExampleSim_Start&quot; &quot;Jane Doe&quot; &quot;03/15/1988&quot; &quot;Penicillin&quot; &quot;REGN 35P&quot;&gt;&gt;
 &lt;&lt;/button&gt;&gt;
 
-[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="10" name="REGN 36P" tags="setup" position="1225,100" size="100,100">&lt;h2&gt;REGN 36P Simulations&lt;/h2&gt;\
+[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="11" name="REGN 36P" tags="setup" position="100,225" size="100,100">&lt;h2&gt;REGN 36P Simulations&lt;/h2&gt;\
 &lt;hr&gt;\
 
 &lt;&lt;button &quot;Jane Doe (Demo Patient)&quot;&gt;&gt;
 	&lt;&lt;launchSim &quot;ExampleSim_Start&quot; &quot;Jane Doe&quot; &quot;03/15/1988&quot; &quot;Penicillin&quot; &quot;REGN 36P&quot;&gt;&gt;
 &lt;&lt;/button&gt;&gt;
 
-[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="11" name="REGN 48P" tags="setup" position="100,225" size="100,100">&lt;h2&gt;REGN 48P Simulations&lt;/h2&gt;\
+[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="12" name="REGN 48P" tags="setup" position="225,225" size="100,100">&lt;h2&gt;REGN 48P Simulations&lt;/h2&gt;\
 &lt;hr&gt;\
 
 &lt;&lt;button &quot;Jane Doe (Demo Patient)&quot;&gt;&gt;
 	&lt;&lt;launchSim &quot;ExampleSim_Start&quot; &quot;Jane Doe&quot; &quot;03/15/1988&quot; &quot;Penicillin&quot; &quot;REGN 48P&quot;&gt;&gt;
 &lt;&lt;/button&gt;&gt;
 
-[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="12" name="Charge_Nurse_Help" tags="sim" position="225,225" size="100,100">&lt;h2&gt;Charge Nurse Helps&lt;/h2&gt;\
+[[Back to main menu|Start]]</tw-passagedata><tw-passagedata pid="13" name="Charge_Nurse_Help" tags="sim" position="350,225" size="100,100">&lt;h2&gt;Charge Nurse Helps&lt;/h2&gt;\
 &#39;&#39;Faculty Script&#39;&#39;
 Faculty or student playing the role of charge nurse should enter the room and state:
-*&quot;Sounds like Jane isn&#39;t feeling good. Why don&#39;t we get her the ordered ondansetron.&quot;</tw-passagedata><tw-passagedata pid="13" name="Charge_Nurse_Help_ProgressLinks" tags="" position="350,225" size="100,100">[[Charge nurse and student administer zofran together|ExampleSim_End]]</tw-passagedata><tw-passagedata pid="14" name="Going_To_Blow" tags="sim" position="475,225" size="100,100">&lt;&lt;audio &quot;vomit&quot; play&gt;&gt;\
+*&quot;Sounds like Jane isn&#39;t feeling good. Why don&#39;t we get her the ordered ondansetron.&quot;</tw-passagedata><tw-passagedata pid="14" name="Charge_Nurse_Help_ProgressLinks" tags="" position="475,225" size="100,100">[[Charge nurse and student administer zofran together|ExampleSim_End]]</tw-passagedata><tw-passagedata pid="15" name="Going_To_Blow" tags="sim" position="600,225" size="100,100">&lt;&lt;audio &quot;vomit&quot; play&gt;&gt;\
 &lt;h2&gt;Feeling Nauseous&lt;/h2&gt;\
 &#39;&#39;Patient Script:&#39;&#39;
 *Oh god, I&#39;m so sorry, I puked. Is it in your hair?
@@ -2011,8 +2115,8 @@ Faculty or student playing the role of charge nurse should enter the room and st
 &lt;&lt;set $gi to &quot;Patient has 300mL dark green emesis.&quot;&gt;&gt;
 
 &#39;&#39;Updated assessment:&#39;&#39;
-&lt;&lt;displayAssessment&gt;&gt;</tw-passagedata><tw-passagedata pid="15" name="Going_To_Blow_ProgressLinks" tags="" position="600,225" size="100,100">[[Student administers zofran|ExampleSim_End]]
-[[Student doesn&#39;t administer zofran|Charge_Nurse_Help]]</tw-passagedata><tw-passagedata pid="16" name="ExampleSim_AssessmentDefaults" tags="" position="725,225" size="100,100">/% Initial assessment for this sim — loaded via loadAssessmentDefaults from _Start. %/
+&lt;&lt;displayAssessment&gt;&gt;</tw-passagedata><tw-passagedata pid="16" name="Going_To_Blow_ProgressLinks" tags="" position="725,225" size="100,100">[[Student administers zofran|ExampleSim_End]]
+[[Student doesn&#39;t administer zofran|Charge_Nurse_Help]]</tw-passagedata><tw-passagedata pid="17" name="ExampleSim_AssessmentDefaults" tags="" position="850,225" size="100,100">/% Initial assessment for this sim — loaded via loadAssessmentDefaults from _Start. %/
 &lt;&lt;set $neuro to &quot;Alert and oriented x4. PERRL. Moves all extremities.&quot;&gt;&gt;
 &lt;&lt;set $cardiac to &quot;HR 98, regular. BP 128/76. No murmurs. Peripheral pulses 2+ bilaterally. Bedside monitor in room, sinus rhythm, 98bpm&quot;&gt;&gt;
 &lt;&lt;set $resp to &quot;RR 22, unlabored. SpO2 94% on room air. Faint crackles at bilateral bases.&quot;&gt;&gt;
@@ -2023,24 +2127,24 @@ Faculty or student playing the role of charge nurse should enter the room and st
 &lt;&lt;set $heent to &quot;Mucous membranes moist. No JVD.&quot;&gt;&gt;
 &lt;&lt;set $psych to &quot;Appropriate affect. Cooperative.&quot;&gt;&gt;
 &lt;&lt;set $vascularAccess to &quot;PIV 20g left forearm, patent.&quot;&gt;&gt;
-&lt;&lt;set $misc to &quot;—&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="17" name="ExampleSim_End" tags="sim" position="850,225" size="100,100">&lt;h2&gt;Example Simulation — End&lt;/h2&gt;\
+&lt;&lt;set $misc to &quot;—&quot;&gt;&gt;</tw-passagedata><tw-passagedata pid="18" name="ExampleSim_End" tags="sim" position="975,225" size="100,100">&lt;h2&gt;Example Simulation — End&lt;/h2&gt;\
 &#39;&#39;Patient Script:&#39;&#39;
 *&quot;Thank you, if feel so much better after that medicine&quot;
 
-&lt;&lt;reset_playtime&gt;&gt;</tw-passagedata><tw-passagedata pid="18" name="ExampleSim_End_ProgressLinks" tags="" position="975,225" size="100,100">[[Return to course menu|$returnHub]]</tw-passagedata><tw-passagedata pid="19" name="ExampleSim_CCEI" tags="" position="1100,225" size="100,100">&lt;&lt;cceiSimTitle &quot;Example Simulation&quot;&gt;&gt;
+&lt;&lt;reset_playtime&gt;&gt;</tw-passagedata><tw-passagedata pid="19" name="ExampleSim_End_ProgressLinks" tags="" position="1100,225" size="100,100">[[Return to course menu|$returnHub]]</tw-passagedata><tw-passagedata pid="20" name="ExampleSim_CCEI" tags="" position="1225,225" size="100,100">&lt;&lt;cceiSimTitle &quot;Example Simulation&quot;&gt;&gt;
 &lt;&lt;cceiContext &quot;clinicalJudgment&quot; &quot;recognizeCues&quot; &quot;Identifies patient cues that require additional subjective assessment questions?&quot;&gt;&gt;
 &lt;&lt;cceiNote 6 &quot;student recognizes signs of nausea related to small bowel obstruction&quot;&gt;&gt;
 &lt;&lt;cceiExpandCategory &quot;clinicalJudgment&quot;&gt;&gt;
 &lt;&lt;cceiExpandCategory &quot;communication&quot;&gt;&gt;
-&lt;&lt;cceiShrinkItem 24&gt;&gt;</tw-passagedata><tw-passagedata pid="20" name="ExampleSim_Start" tags="sim" position="1225,225" size="100,100">&lt;&lt;cacheSimAudio &quot;vomit&quot; &quot;audio/sims/example/vomit.mp3&quot;&gt;&gt;\
+&lt;&lt;cceiShrinkItem 24&gt;&gt;</tw-passagedata><tw-passagedata pid="21" name="ExampleSim_Start" tags="sim" position="100,350" size="100,100">&lt;&lt;cacheSimAudio &quot;vomit&quot; &quot;audio/sims/example/vomit.mp3&quot;&gt;&gt;\
 &lt;&lt;loadAssessmentDefaults &quot;ExampleSim_AssessmentDefaults&quot;&gt;&gt;\
 &lt;&lt;loadSimCCEI &quot;ExampleSim_CCEI&quot;&gt;&gt;\
 &lt;h2&gt;Example Simulation — Start&lt;/h2&gt;\
 &#39;&#39;Patient Script:&#39;&#39;
 *Hi I don&#39;t feel so great.
 &#39;&#39;Physical assessment:&#39;&#39;
-&lt;&lt;displayAssessment&gt;&gt;</tw-passagedata><tw-passagedata pid="21" name="ExampleSim_Start_ProgressLinks" tags="" position="100,350" size="100,100">[[Student asks why patient isn&#39;t feeling well|Subjective_Assessment]]
-[[Student progresses with assessment|Going_To_Blow]]</tw-passagedata><tw-passagedata pid="22" name="Subjective_Assessment" tags="sim" position="225,350" size="100,100">&lt;h2&gt;Subjective Assessment&lt;/h2&gt;\
+&lt;&lt;displayAssessment&gt;&gt;</tw-passagedata><tw-passagedata pid="22" name="ExampleSim_Start_ProgressLinks" tags="" position="225,350" size="100,100">[[Student asks why patient isn&#39;t feeling well|Subjective_Assessment]]
+[[Student progresses with assessment|Going_To_Blow]]</tw-passagedata><tw-passagedata pid="23" name="Subjective_Assessment" tags="sim" position="350,350" size="100,100">&lt;h2&gt;Subjective Assessment&lt;/h2&gt;\
 &#39;&#39;Patient Script:&#39;&#39;
 *I feel really nauseous.
 *I feel like I haven&#39;t had a BM in days.
@@ -2049,7 +2153,7 @@ Faculty or student playing the role of charge nurse should enter the room and st
 &lt;&lt;set $cardiac to &quot;HR increases on monitor to 104bpm&quot;&gt;&gt;
 
 &#39;&#39;Updated assessment:&#39;&#39;
-&lt;&lt;displayAssessment&gt;&gt;</tw-passagedata><tw-passagedata pid="23" name="Subjective_Assessment_ProgressLinks" tags="" position="350,350" size="100,100">[[Student administers zofran|ExampleSim_End]]
+&lt;&lt;displayAssessment&gt;&gt;</tw-passagedata><tw-passagedata pid="24" name="Subjective_Assessment_ProgressLinks" tags="" position="475,350" size="100,100">[[Student administers zofran|ExampleSim_End]]
 [[Student doesn&#39;t administer zofran|Going_To_Blow]]</tw-passagedata></tw-storydata>
 	<script id="script-sugarcube" type="text/javascript">
 	/*! SugarCube JS */
