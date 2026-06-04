@@ -78,7 +78,7 @@ Nursing Simulation Framework
 <hr>
 <</if>>
 <</nobr>>
-:: StoryCaption {"position":"525,25","size":"100,100"}
+:: StoryMenu {"position":"525,25","size":"100,100"}
 <<if $currentSimStart>>
 	<<button "Repeat Sim">>
 		<<repeatSim>>
@@ -277,7 +277,10 @@ Nursing Simulation Framework
     };
 
     setup.positionSimFooter = function () {
-        var $footer = jQuery('#sim-footer');
+        var $footer = jQuery('body > #sim-footer');
+        if (!$footer.length) {
+            $footer = jQuery('#sim-footer');
+        }
         var $story = jQuery('#story');
         if (!$footer.length || !$story.length) {
             return;
@@ -292,7 +295,12 @@ Nursing Simulation Framework
     };
 
     setup.pinSimFooter = function () {
-        var $footer = jQuery('#sim-footer');
+        /* Drop footers left on body from the previous sim passage before pinning the new one. */
+        jQuery('body > #sim-footer').remove();
+        var $footer = jQuery('#passages #sim-footer');
+        if (!$footer.length) {
+            $footer = jQuery('#sim-footer');
+        }
         if (!$footer.length) {
             jQuery('body').removeClass('sim-footer-active');
             return;
@@ -506,6 +514,10 @@ Nursing Simulation Framework
 }());
 
 :: StoryStylesheet [stylesheet]
+#menu-item-saves, 
+#menu-item-restart {
+    display: none;
+}
 .sim-header {
 	display: flex;
 	flex-wrap: wrap;

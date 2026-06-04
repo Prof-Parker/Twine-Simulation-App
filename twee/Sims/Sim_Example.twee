@@ -1,6 +1,5 @@
 :: Charge_Nurse_Help [sim]
-!!Charge Nurse Helps
-
+<h2>Charge Nurse Helps</h2>\
 ''Faculty Script''
 Faculty or student playing the role of charge nurse should enter the room and state:
 *"Sounds like Jane isn't feeling good. Why don't we get her the ordered ondansetron."
@@ -12,8 +11,7 @@ Faculty or student playing the role of charge nurse should enter the room and st
 
 :: Going_To_Blow [sim]
 <<audio "vomit" play>>\
-!! Feeling Nauseous
-
+<h2>Feeling Nauseous</h2>\
 ''Patient Script:''
 *Oh god, I'm so sorry, I puked. Is it in your hair?
 
@@ -45,8 +43,7 @@ Faculty or student playing the role of charge nurse should enter the room and st
 
 
 :: ExampleSim_End [sim]
-!! Example Simulation — End
-
+<h2>Example Simulation — End</h2>\
 ''Patient Script:''
 *"Thank you, if feel so much better after that medicine"
 
@@ -61,9 +58,9 @@ Faculty or student playing the role of charge nurse should enter the room and st
 <<cacheSimAudio "vomit" "audio/sims/example/vomit.mp3">>\
 <<loadAssessmentDefaults "ExampleSim_AssessmentDefaults">>\
 <h2>Example Simulation — Start</h2>\
-<h3>''Patient Script:''</h3>\
+''Patient Script:''
 *Hi I don't feel so great.
-<h3>''Physical assessment:''</h3>\
+''Physical assessment:''
 <<displayAssessment>>
 
 
@@ -73,8 +70,7 @@ Faculty or student playing the role of charge nurse should enter the room and st
 
 
 :: Subjective_Assessment [sim]
-!! Subjective Assessment
-
+<h2>Subjective Assessment</h2>\
 ''Patient Script:''
 *I feel really nauseous.
 *I feel like I haven't had a BM in days.

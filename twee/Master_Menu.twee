@@ -14,9 +14,10 @@
 
 
 :: REGN 15P [setup]
-!! REGN 15P Simulations
+<h2>REGN 15P Simulations</h2>\
+<hr>\
 
-<<button "Example Patient (demo)">>
+<<button "Jane Doe (Demo Patient)">>
 	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 15P">>
 <</button>>
 
@@ -24,9 +25,10 @@
 
 
 :: REGN 25P [setup]
-!! REGN 25P Simulations
+<h2>REGN 25P Simulations</h2>\
+<hr>\
 
-<<button "Example Patient (demo)">>
+<<button "Jane Doe (Demo Patient)">>
 	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 25P">>
 <</button>>
 
@@ -34,9 +36,10 @@
 
 
 :: REGN 35P [setup]
-!! REGN 35P Simulations
+<h2>REGN 35P Simulations</h2>\
+<hr>\
 
-<<button "Example Patient (demo)">>
+<<button "Jane Doe (Demo Patient)">>
 	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 35P">>
 <</button>>
 
@@ -44,9 +47,10 @@
 
 
 :: REGN 36P [setup]
-!! REGN 36P Simulations
+<h2>REGN 36P Simulations</h2>\
+<hr>\
 
-<<button "Example Patient (demo)">>
+<<button "Jane Doe (Demo Patient)">>
 	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 36P">>
 <</button>>
 
@@ -54,9 +58,10 @@
 
 
 :: REGN 48P [setup]
-!! REGN 48P Simulations
+<h2>REGN 48P Simulations</h2>\
+<hr>\
 
-<<button "Example Patient (demo)">>
+<<button "Jane Doe (Demo Patient)">>
 	<<launchSim "ExampleSim_Start" "Jane Doe" "03/15/1988" "Penicillin" "REGN 48P">>
 <</button>>
 
