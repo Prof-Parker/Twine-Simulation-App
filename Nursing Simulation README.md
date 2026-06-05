@@ -168,7 +168,11 @@ During a sim, the **CCEI 2.0** tray sits in the left UI bar (mini earned/possibl
 - **Pin** — keep the overlay open while moving between passages; click **Pin** again to unpin.
 - **Collapse** (in the overlay header) — close the overlay and return to tray-only.
 
-The expanded form uses a **two-column layout**: competencies and scores on the left, subcategory and overall comments on the right (stacks on narrow screens). **Export PDF** at the bottom downloads a report via [html2pdf.js](https://github.com/eKoopmans/html2pdf.js) when online; if the CDN is blocked (offline or `file://`), the browser **Print** dialog opens so you can choose **Save as PDF**.
+The expanded form uses a **two-column layout**: competencies and scores on the left, subcategory and overall comments on the right (stacks on narrow screens). At the bottom:
+
+- **Export CSV** — one row per **visible** competency (respects shrink and category filters), with metadata on each row for filtering in Excel. Columns: `exportedAt`, `simTitle`, `runSequence`, `courseHub` (`$returnHub`), `simStartPassage` (`$currentSimStart`), `evalDate`, `studentName`, `evaluatorName`, `competencyId`, `competencyLabel`, `category`, `subcategory`, `score`, `itemNote`, `subcategoryComment`, `overallComment`, `earned`, `possible`, `percent`. Filename pattern: `{simTitle}-{evalDate}-{runSequence}.csv` (e.g. `Example_Simulation-2026-06-04-1.csv` for the first student that day, `-2` for the next **Repeat Sim** run). Sequence resets per calendar day per simulation title (stored in the browser so faculty can export many runs and import all files at end of day).
+- **Export PDF** — report built from evaluation data using a [pdfmake](https://pdfmake.github.io/docs/) template (vector text, single-column layout, predictable page breaks). Keep `lib/pdfmake/` next to `index.html` for offline/`file://` use. If pdfmake scripts are missing, the browser **Print** dialog opens so you can choose **Save as PDF**.
+
+**Shared master workbook (faculty / accreditation):** There is no in-app database. After each evaluation, download CSV and **append** rows into a shared Excel or OneDrive master sheet. Use `simTitle`, `courseHub`, and `exportedAt` to filter runs over time and compare changes. PDF remains useful for a single printable snapshot; CSV is the source of truth for longitudinal review.
 
 Rebuild after `.twee` edits: `.\build.ps1`.
-</details>

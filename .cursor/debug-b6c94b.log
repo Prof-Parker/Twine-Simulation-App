@@ -1,0 +1,3 @@
+{"sessionId":"b6c94b","runId":"pre-fix","hypothesisId":"B","location":"Framework.twee:exportCCEIPdf","message":"export html built","data":{"bodyLength":5415,"hasActiveCCEI":true,"hasCceiState":true,"html2pdfReady":true},"timestamp":1780613974846}
+{"sessionId":"b6c94b","runId":"post-fix-v2","hypothesisId":"F","location":"Framework.twee:exportCCEIPdf","message":"iframe export styles","data":{"bodyColor":"rgb(17, 17, 17)","bodyBackground":"rgb(255, 255, 255)","h2Color":"rgb(17, 17, 17)","textLen":1566,"scrollH":1235},"timestamp":1780613974850}
+{"sessionId":"b6c94b","runId":"post-fix-v2","hypothesisId":"D","location":"Framework.twee:exportCCEIPdf","message":"html2pdf save resolved","data":{"filename":"CCEI-Example_Simulation.pdf","mode":"iframe"},"timestamp":1780613975051}
